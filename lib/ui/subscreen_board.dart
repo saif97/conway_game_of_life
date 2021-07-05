@@ -22,7 +22,7 @@ class _Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final BoardModel model = Provider.of(context, listen: false);
+    final BoardModel model = Provider.of(context);
     return Container(
       child: Column(
         children: <Widget>[
@@ -45,6 +45,16 @@ class _Main extends StatelessWidget {
               TextButton(
                 child: Text("Randomize"),
                 onPressed: model.initBoardRandomly,
+              ),
+              Slider(
+                value: model.speedMultiplier.toDouble(),
+                onChanged: (v) {
+                  model.speedMultiplier = v.toInt();
+                },
+                divisions: 6,
+                max: 3,
+                min: -3,
+                label: model.speedMultiplier.toString() + 'X',
               ),
             ],
           )

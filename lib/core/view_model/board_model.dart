@@ -8,6 +8,7 @@ class BoardModel extends ChangeNotifier {
   final int columns;
   final int rows;
   late Timer _timer;
+  int _speedMultiplier = 0;
   // final Queue<Cell> queueCells = Queue();
   late List<List<Cell>> _currentMatrixUniverse;
   List<List<Cell>> _initialMatrixUniverse;
@@ -25,7 +26,9 @@ class BoardModel extends ChangeNotifier {
   }
 
   void play() {
-    _timer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+    var updateRate = 50 + (speedMultiplier * 10);
+    print(updateRate);
+    _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
       updateCells();
 
       notifyListeners();
@@ -88,5 +91,14 @@ class BoardModel extends ChangeNotifier {
     _timer.toString();
   }
 
-  get currentMatrixUniverse => _currentMatrixUniverse;
+  List<List<Cell>> get currentMatrixUniverse => _currentMatrixUniverse;
+  int get speedMultiplier => _speedMultiplier;
+
+  set speedMultiplier(int newValue) {
+    if (newValue != _speedMultiplier) {
+      _speedMultiplier = newValue;
+      play();
+      notifyListeners();
+    }
+  }
 }
