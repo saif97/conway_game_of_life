@@ -9,19 +9,19 @@ class BoardModel extends ChangeNotifier {
   final int rows;
   late Timer _timer;
   // final Queue<Cell> queueCells = Queue();
-  late List<List<Cell>> currentMatrixUniverse;
-  List<List<Cell>> initialMatrixUniverse;
+  late List<List<Cell>> _currentMatrixUniverse;
+  List<List<Cell>> _initialMatrixUniverse;
 
   BoardModel({required this.columns, required this.rows})
-      : initialMatrixUniverse = List.filled(columns, List.filled(rows, Cell(false))) {
-    currentMatrixUniverse = initialMatrixUniverse;
+      : _initialMatrixUniverse = List.filled(columns, List.filled(rows, Cell(false))) {
+    _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
   void initBoardRandomly() {
     final randomNumberGenerator = Random();
-    initialMatrixUniverse = List.generate(
+    _initialMatrixUniverse = List.generate(
         columns, (_) => List.generate(rows, (_) => Cell(randomNumberGenerator.nextBool())));
-    currentMatrixUniverse = initialMatrixUniverse;
+    _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
   void play() {
@@ -33,18 +33,22 @@ class BoardModel extends ChangeNotifier {
   }
 
   void reset() {
-    currentMatrixUniverse = initialMatrixUniverse;
+    _currentMatrixUniverse = _initialMatrixUniverse;
     notifyListeners();
+  }
+
+  void pause() {
+    _timer.cancel();
   }
 
   updateCells() {
     List<List<Cell>> updatedCells = List<List<Cell>>.of(
-        currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive)).toList()));
+        _currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive)).toList()));
 
     for (int col = 0; col < columns; col++) {
       for (int row = 0; row < rows; row++) {
         int aliveNeighbours = this._getAliveNeighbours(col, row);
-        bool isCurrentCellAlive = this.currentMatrixUniverse[col][row].isAlive;
+        bool isCurrentCellAlive = this._currentMatrixUniverse[col][row].isAlive;
 
         if (!isCurrentCellAlive && aliveNeighbours == 3) {
           updatedCells[col][row].revive();
@@ -54,7 +58,7 @@ class BoardModel extends ChangeNotifier {
       }
     }
 
-    currentMatrixUniverse = updatedCells;
+    _currentMatrixUniverse = updatedCells;
   }
 
   int _getAliveNeighbours(int col, int row) {
@@ -71,7 +75,7 @@ class BoardModel extends ChangeNotifier {
 
         if (!isOutOfRange &&
             isNeighbourCell &&
-            currentMatrixUniverse[neighbourCellColumn][neighbourCellRow].isAlive) {
+            _currentMatrixUniverse[neighbourCellColumn][neighbourCellRow].isAlive) {
           aliveNeighbours++;
         }
       }
@@ -79,4 +83,10 @@ class BoardModel extends ChangeNotifier {
 
     return aliveNeighbours;
   }
+
+  void dispose() {
+    _timer.toString();
+  }
+
+  get currentMatrixUniverse => _currentMatrixUniverse;
 }

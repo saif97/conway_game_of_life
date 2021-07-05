@@ -27,9 +27,26 @@ class _Main extends StatelessWidget {
       child: Column(
         children: <Widget>[
           _Board(),
-          TextButton(
-            child: Text("Reset"),
-            onPressed: model.reset,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextButton(
+                child: Text("Reset"),
+                onPressed: model.reset,
+              ),
+              TextButton(
+                child: Text("Pause"),
+                onPressed: model.pause,
+              ),
+              TextButton(
+                child: Text("Play"),
+                onPressed: model.play,
+              ),
+              TextButton(
+                child: Text("Randomize"),
+                onPressed: model.initBoardRandomly,
+              ),
+            ],
           )
         ],
       ),
