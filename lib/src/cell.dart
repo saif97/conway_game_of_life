@@ -11,8 +11,12 @@ class Cell {
   die() => this._isAlive = false;
   revive() => this._isAlive = true;
 
-  bool operator ==(otherCell) =>
-      otherCell is Cell && this.isAlive == otherCell.isAlive;
+  bool operator ==(otherCell) => otherCell is Cell && this.isAlive == otherCell.isAlive;
 
   int get hashCode => this._isAlive.hashCode;
+  @override
+  String toString() {
+    // TODO: implement toString
+    return isAlive.toString();
+  }
 }

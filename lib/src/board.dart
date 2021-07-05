@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'cell.dart';
-import 'utils/size-config.dart';
 
 class Board extends StatefulWidget {
   final int _columns;
@@ -121,10 +120,10 @@ class BoardState extends State<Board> {
   }
 
   Widget _buildCell(BuildContext context, Cell cell) {
-    double squareWidth = SizeConfig.blockSizeHorizontal * 1.5;
+
     return Container(
-      width: squareWidth,
-      height: squareWidth,
+      width: 20,
+      height: 20,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey, width: 0.5),
         color: cell.isAlive ? Colors.blue : Colors.white,
