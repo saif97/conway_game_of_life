@@ -1,11 +1,21 @@
-import 'dart:math';
+import 'package:conway_game_of_life/ui/subscreen_board.dart';
+import 'package:flutter/material.dart';
 
 class Cell {
+  final int upperLeftX, upperLeftY;
+  final Rect rect; // this is the Coordinates for drawing the squares.
   bool _isAlive;
 
-  Cell.fromRandomLifeStatus() : this._isAlive = new Random().nextInt(5) == 0;
-
-  Cell(this._isAlive);
+  // Cell(this._isAlive, );
+  Cell(this._isAlive, {required this.upperLeftX, required this.upperLeftY})
+      : rect = Rect.fromCenter(
+          center: Offset(
+            (upperLeftX + 1) * (SQUARE_LENGTH / 2),
+            (upperLeftY + 1) * (SQUARE_LENGTH / 2),
+          ),
+          height: SQUARE_LENGTH,
+          width: SQUARE_LENGTH,
+        );
 
   bool get isAlive => _isAlive;
   die() => this._isAlive = false;
@@ -15,8 +25,5 @@ class Cell {
 
   int get hashCode => this._isAlive.hashCode;
   @override
-  String toString() {
-    // TODO: implement toString
-    return isAlive.toString();
-  }
+  String toString() => (isAlive.toString() + "| X: $upperLeftX, Y:$upperLeftY | rect $rect");
 }

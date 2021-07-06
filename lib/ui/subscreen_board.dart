@@ -12,9 +12,7 @@ class SubScreenBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => BoardModel()
-        ..initBoardRandomly()
-        ..play(),
+      create: (_) => BoardModel(randomly: true)..play(),
       child: _Main(),
     );
   }
@@ -30,7 +28,7 @@ class _Main extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          Expanded(child: _Board()),
+          Expanded(child: Center(child: _Board2())),
           _Settings(),
           _Instructions(),
         ],
@@ -63,13 +61,11 @@ class _Settings extends StatelessWidget {
           ),
           TextButton(
             child: Text("Randomize"),
-            onPressed: model.initBoardRandomly,
+            onPressed: model.randomize,
           ),
           Slider(
             value: model.speedMultiplier.toDouble(),
-            onChanged: (v) {
-              model.speedMultiplier = v.toInt();
-            },
+            onChanged: (v) => model.speedMultiplier = v.toInt(),
             divisions: 6,
             max: 3,
             min: -3,
@@ -136,21 +132,27 @@ class _Board extends StatelessWidget {
   Widget build(BuildContext context) {
     final BoardModel model = Provider.of(context);
 
-    return _Keyboard_Gesture(
-      child: Column(
-        // mainAxisAlignment: MainAxisAlignment.center,
-        // mainAxisSize: MainAxisSize.min,
-        children: [
-          // Container(height: 15), // padding above.
-          ...List.generate(
-              model.numOfColumns,
-              (col) => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(model.numOfRows,
-                        (row) => this._buildCell(context, model.currentMatrixUniverse[col][row])),
-                  ))
-        ],
+    return Container(
+      // width: SQUARE_LENGTH * model.numOfColumns,
+      width: MediaQuery.of(context).size.width,
+      // height: SQUARE_LENGTH * model.numOfRows,
+      child: Center(
+        child: _Keyboard_Gesture(
+          child: Column(
+            children: [
+              // Container(height: 15), // padding above.
+              ...List.generate(
+                  model.numOfColumns,
+                  (col) => Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                            model.numOfRows,
+                            (row) =>
+                                this._buildCell(context, model.currentMatrixUniverse[col][row])),
+                      ))
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -164,5 +166,42 @@ class _Board extends StatelessWidget {
         color: cell.isAlive ? Colors.blue : Colors.white,
       ),
     );
+  }
+}
+
+class _Board2 extends StatelessWidget {
+  const _Board2({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: CustomPaint(
+        painter: CPainter(),
+      ),
+    );
+  }
+}
+
+class CPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var eachCol = 0; eachCol < 50; eachCol++) {
+      for (var eachRow = 0; eachRow < 50; eachRow++) {
+        final upperLeft = Offset(eachCol.toDouble(), eachRow.toDouble()) * SQUARE_LENGTH;
+        final lowerRight = Offset(eachCol.toDouble() + 1, eachRow.toDouble() + 1) * SQUARE_LENGTH;
+        canvas.drawRect(
+          Rect.fromPoints(upperLeft, lowerRight),
+          Paint()
+            ..strokeWidth = 1
+            ..style = PaintingStyle.stroke,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    // TODO: implement shouldRepaint
+    throw UnimplementedError();
   }
 }

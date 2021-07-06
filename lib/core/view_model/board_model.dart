@@ -16,16 +16,25 @@ class BoardModel extends ChangeNotifier {
   bool isModKeyPressed = false;
   Offset _drawPos = Offset.zero;
 
-  BoardModel() {
-    _initialMatrixUniverse = List.filled(numOfColumns, List.filled(numOfRows, Cell(false)));
+  BoardModel({bool randomly = false}) {
+    _initialMatrixUniverse = getBoard(randomly: randomly);
     _currentMatrixUniverse = _initialMatrixUniverse;
+    print(_initialMatrixUniverse);
   }
 
-  void initBoardRandomly() {
+  List<List<Cell>> getBoard({bool randomly = false}) {
     final randomNumberGenerator = Random();
-    _initialMatrixUniverse = List.generate(numOfColumns,
-        (_) => List.generate(numOfRows, (_) => Cell(randomNumberGenerator.nextBool())));
-    _currentMatrixUniverse = _initialMatrixUniverse;
+    return List.generate(
+      numOfColumns,
+      (eachCol) => List.generate(
+        numOfRows,
+        (eachRow) => Cell(
+          randomly ? randomNumberGenerator.nextBool() : false,
+          upperLeftX: eachCol,
+          upperLeftY: eachRow,
+        ),
+      ),
+    );
   }
 
   void play() {
@@ -47,9 +56,16 @@ class BoardModel extends ChangeNotifier {
     _timer.cancel();
   }
 
+  void randomize() {
+    _initialMatrixUniverse = getBoard(randomly: true);
+    _currentMatrixUniverse = _initialMatrixUniverse;
+  }
+
+// todo: clean this up
   updateCells() {
-    List<List<Cell>> updatedCells = List<List<Cell>>.of(
-        _currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive)).toList()));
+    List<List<Cell>> updatedCells = List<List<Cell>>.of(_currentMatrixUniverse.map((e) => e
+        .map<Cell>((e) => Cell(e.isAlive, upperLeftX: e.upperLeftX, upperLeftY: e.upperLeftY))
+        .toList()));
 
     for (int col = 0; col < numOfColumns; col++) {
       for (int row = 0; row < numOfRows; row++) {
