@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:conway_game_of_life/src/cell.dart';
 import 'package:flutter/material.dart';
 
-class BoardModel extends ChangeNotifier {
+class ModelBoard extends ChangeNotifier {
   final int numOfColumns = 50;
   final int numOfRows = 50;
   late Timer _timer;
@@ -16,7 +16,7 @@ class BoardModel extends ChangeNotifier {
   bool isModKeyPressed = false;
   Offset _drawPos = Offset.zero;
 
-  BoardModel({bool randomly = false}) {
+  ModelBoard({bool randomly = false}) {
     _initialMatrixUniverse = getBoard(randomly: randomly);
     _currentMatrixUniverse = _initialMatrixUniverse;
     print(_initialMatrixUniverse);

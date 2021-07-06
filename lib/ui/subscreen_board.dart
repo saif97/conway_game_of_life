@@ -12,7 +12,7 @@ class SubScreenBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => BoardModel(randomly: true)..play(),
+      create: (_) => ModelBoard(randomly: true)..play(),
       child: _Main(),
     );
   }
@@ -24,11 +24,13 @@ class _Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          Expanded(child: Center(child: _Board2())),
+          _Board2(),
           _Settings(),
           _Instructions(),
         ],
@@ -42,7 +44,7 @@ class _Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final BoardModel model = Provider.of(context);
+    final ModelBoard model = Provider.of(context);
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -93,13 +95,13 @@ class _Instructions extends StatelessWidget {
   }
 }
 
-class _Keyboard_Gesture extends StatelessWidget {
+class _Keyboard_Gesture_InteractiveView extends StatelessWidget {
   final Widget child;
 
-  const _Keyboard_Gesture({Key? key, required this.child}) : super(key: key);
+  const _Keyboard_Gesture_InteractiveView({Key? key, required this.child}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final BoardModel model = Provider.of(context);
+    final ModelBoard model = Provider.of(context);
     FocusScope.of(context).requestFocus();
     return RawKeyboardListener(
       focusNode: FocusNode(),
@@ -130,14 +132,14 @@ class _Board extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final BoardModel model = Provider.of(context);
+    final ModelBoard model = Provider.of(context);
 
     return Container(
       // width: SQUARE_LENGTH * model.numOfColumns,
       width: MediaQuery.of(context).size.width,
       // height: SQUARE_LENGTH * model.numOfRows,
       child: Center(
-        child: _Keyboard_Gesture(
+        child: _Keyboard_Gesture_InteractiveView(
           child: Column(
             children: [
               // Container(height: 15), // padding above.
@@ -174,23 +176,34 @@ class _Board2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: CustomPaint(
-        painter: CPainter(),
+    final ModelBoard model = Provider.of(context, listen: false);
+    return Expanded(
+      child: _Keyboard_Gesture_InteractiveView(
+        child: Center(
+          child: Container(
+            width: model.numOfColumns * SQUARE_LENGTH,
+            height: model.numOfRows * SQUARE_LENGTH,
+            child: CustomPaint(
+              painter: CPainter(context),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
 class CPainter extends CustomPainter {
+  final BuildContext context;
+
+  CPainter(this.context);
   @override
   void paint(Canvas canvas, Size size) {
-    for (var eachCol = 0; eachCol < 50; eachCol++) {
-      for (var eachRow = 0; eachRow < 50; eachRow++) {
-        final upperLeft = Offset(eachCol.toDouble(), eachRow.toDouble()) * SQUARE_LENGTH;
-        final lowerRight = Offset(eachCol.toDouble() + 1, eachRow.toDouble() + 1) * SQUARE_LENGTH;
+    final ModelBoard model = Provider.of(context, listen: false);
+    for (var eachCol = 0; eachCol < model.numOfColumns; eachCol++) {
+      for (var eachRow = 0; eachRow < model.numOfRows; eachRow++) {
         canvas.drawRect(
-          Rect.fromPoints(upperLeft, lowerRight),
+          Cell.getRect(eachCol, eachRow),
           Paint()
             ..strokeWidth = 1
             ..style = PaintingStyle.stroke,
@@ -202,6 +215,6 @@ class CPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     // TODO: implement shouldRepaint
-    throw UnimplementedError();
+    return false;
   }
 }
