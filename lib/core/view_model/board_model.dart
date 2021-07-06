@@ -5,23 +5,26 @@ import 'package:conway_game_of_life/src/cell.dart';
 import 'package:flutter/material.dart';
 
 class BoardModel extends ChangeNotifier {
-  final int columns;
-  final int rows;
+  final int numOfColumns = 50;
+  final int numOfRows = 50;
   late Timer _timer;
   int _speedMultiplier = 0;
   // final Queue<Cell> queueCells = Queue();
   late List<List<Cell>> _currentMatrixUniverse;
-  List<List<Cell>> _initialMatrixUniverse;
+  late List<List<Cell>> _initialMatrixUniverse;
 
-  BoardModel({required this.columns, required this.rows})
-      : _initialMatrixUniverse = List.filled(columns, List.filled(rows, Cell(false))) {
+  bool isModKeyPressed = false;
+  Offset _drawPos = Offset.zero;
+
+  BoardModel() {
+    _initialMatrixUniverse = List.filled(numOfColumns, List.filled(numOfRows, Cell(false)));
     _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
   void initBoardRandomly() {
     final randomNumberGenerator = Random();
-    _initialMatrixUniverse = List.generate(
-        columns, (_) => List.generate(rows, (_) => Cell(randomNumberGenerator.nextBool())));
+    _initialMatrixUniverse = List.generate(numOfColumns,
+        (_) => List.generate(numOfRows, (_) => Cell(randomNumberGenerator.nextBool())));
     _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
@@ -48,8 +51,8 @@ class BoardModel extends ChangeNotifier {
     List<List<Cell>> updatedCells = List<List<Cell>>.of(
         _currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive)).toList()));
 
-    for (int col = 0; col < columns; col++) {
-      for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < numOfColumns; col++) {
+      for (int row = 0; row < numOfRows; row++) {
         int aliveNeighbours = this._getAliveNeighbours(col, row);
         bool isCurrentCellAlive = this._currentMatrixUniverse[col][row].isAlive;
 
@@ -71,9 +74,9 @@ class BoardModel extends ChangeNotifier {
         final neighbourCellRow = row + rowSummand;
         final neighbourCellColumn = col + colSummand;
         bool isOutOfRange = (neighbourCellRow) < 0 ||
-            (neighbourCellRow) > (rows - 1) ||
+            (neighbourCellRow) > (numOfRows - 1) ||
             (neighbourCellColumn) < 0 ||
-            (neighbourCellColumn) > (columns - 1);
+            (neighbourCellColumn) > (numOfColumns - 1);
         bool isNeighbourCell = rowSummand != 0 || colSummand != 0;
 
         if (!isOutOfRange &&
@@ -93,6 +96,7 @@ class BoardModel extends ChangeNotifier {
 
   List<List<Cell>> get currentMatrixUniverse => _currentMatrixUniverse;
   int get speedMultiplier => _speedMultiplier;
+  Offset get drawPos => _drawPos;
 
   set speedMultiplier(int newValue) {
     if (newValue != _speedMultiplier) {
@@ -100,5 +104,11 @@ class BoardModel extends ChangeNotifier {
       play();
       notifyListeners();
     }
+  }
+
+  void setDrawPos(int x, int y) {
+    if (x < 0 || y < 0 || x >= numOfColumns || y >= numOfRows) return;
+
+    _currentMatrixUniverse[y][x].revive();
   }
 }

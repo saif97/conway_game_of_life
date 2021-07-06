@@ -25,11 +25,6 @@ class _Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('reloaded');
-    return Column(
-      children: <Widget>[
-        SubScreenBoard(),
-
-      ],
-    );
+    return SubScreenBoard();
   }
 }
