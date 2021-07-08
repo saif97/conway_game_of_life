@@ -44,7 +44,8 @@ class _Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context);
+    final ModelBoard model = Provider.of(context, listen: false);
+    print('yooo updated');
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -73,9 +74,82 @@ class _Settings extends StatelessWidget {
             min: -3,
             label: model.speedMultiplier.toString() + 'X',
           ),
+          SetBoardSize(),
         ],
       ),
     );
+  }
+}
+
+class SetBoardSize extends StatefulWidget {
+  SetBoardSize({Key? key}) : super(key: key);
+
+  @override
+  _SetBoardSizeState createState() => _SetBoardSizeState();
+}
+
+class _SetBoardSizeState extends State<SetBoardSize> {
+  final contNumOfCols = TextEditingController();
+  final contNumOfRows = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxLength = 6;
+    final ModelBoard model = Provider.of(context, listen: false);
+
+    if (contNumOfCols.text.isEmpty) contNumOfCols.text = model.numOfColumns.toString();
+    if (contNumOfRows.text.isEmpty) contNumOfRows.text = model.numOfRows.toString();
+
+    return Container(
+      child: Row(
+        children: [
+          getTextField(contNumOfCols, 'Columns'),
+          Container(width: 15),
+          getTextField(contNumOfRows, "Rows"),
+          Container(width: 15),
+          TextButton(
+            child: Text('Set'),
+            onPressed: () {
+              model.setBoardSize(int.parse(contNumOfCols.text), int.parse(contNumOfRows.text));
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget getTextField(TextEditingController cont, String label) {
+    return Container(
+      width: 70,
+      child: TextFormField(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        validator: (value) {
+          // in the case that value is not an int
+          return int.tryParse(value ?? '') != null ? null : value;
+        },
+        decoration:
+            InputDecoration(labelText: label, labelStyle: Theme.of(context).textTheme.caption),
+        maxLength: 6,
+        maxLines: 1,
+        keyboardType: TextInputType.number,
+        expands: false,
+        controller: cont,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    contNumOfCols.dispose();
+    contNumOfRows.dispose();
+
+    super.dispose();
   }
 }
 
