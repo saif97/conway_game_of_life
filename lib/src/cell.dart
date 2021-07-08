@@ -12,7 +12,7 @@ class Cell {
 
   bool get isAlive => _isAlive;
   die() => this._isAlive = false;
-  revive() => this._isAlive = true;
+  void revive() => this._isAlive = true;
 
   bool operator ==(otherCell) => otherCell is Cell && this.isAlive == otherCell.isAlive;
 

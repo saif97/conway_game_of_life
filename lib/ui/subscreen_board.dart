@@ -1,4 +1,4 @@
-import 'package:conway_game_of_life/core/view_model/board_model.dart';
+import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:conway_game_of_life/src/cell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -95,10 +95,10 @@ class _Instructions extends StatelessWidget {
   }
 }
 
-class _Keyboard_Gesture_InteractiveView extends StatelessWidget {
+class _KeyboardGestureControllers extends StatelessWidget {
   final Widget child;
 
-  const _Keyboard_Gesture_InteractiveView({Key? key, required this.child}) : super(key: key);
+  const _KeyboardGestureControllers({Key? key, required this.child}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context);
@@ -109,63 +109,17 @@ class _Keyboard_Gesture_InteractiveView extends StatelessWidget {
       onKey: (RawKeyEvent event) async {
         model.isModKeyPressed = event.isControlPressed;
       },
-      child: InteractiveViewer(
-        child: GestureDetector(
-          onPanUpdate: (v) {
-            if (model.isModKeyPressed) {
-              final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-              final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+      child: GestureDetector(
+        onPanUpdate: (v) {
+          if (model.isModKeyPressed) {
+            final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+            final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
-              model.setDrawPos(x, y);
-            }
-          },
-          onTapDown: (v) {},
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _Board extends StatelessWidget {
-  const _Board({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context);
-
-    return Container(
-      // width: SQUARE_LENGTH * model.numOfColumns,
-      width: MediaQuery.of(context).size.width,
-      // height: SQUARE_LENGTH * model.numOfRows,
-      child: Center(
-        child: _Keyboard_Gesture_InteractiveView(
-          child: Column(
-            children: [
-              // Container(height: 15), // padding above.
-              ...List.generate(
-                  model.numOfColumns,
-                  (col) => Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                            model.numOfRows,
-                            (row) =>
-                                this._buildCell(context, model.currentMatrixUniverse[col][row])),
-                      ))
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCell(BuildContext context, Cell cell) {
-    return Container(
-      width: SQUARE_LENGTH,
-      height: SQUARE_LENGTH,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 0.5),
-        color: cell.isAlive ? Colors.blue : Colors.white,
+            model.setDrawPos(y, x);
+          }
+        },
+        onTapDown: (v) {},
+        child: child,
       ),
     );
   }
@@ -176,15 +130,15 @@ class _Board2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: false);
+    final ModelBoard model = Provider.of(context, listen: true);
     return Expanded(
-      child: _Keyboard_Gesture_InteractiveView(
+      child: InteractiveViewer(
         child: Center(
-          child: Container(
-            width: model.numOfColumns * SQUARE_LENGTH,
-            height: model.numOfRows * SQUARE_LENGTH,
+          child: _KeyboardGestureControllers(
             child: CustomPaint(
-              painter: CPainter(context),
+              size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+              painter: GridPainter(context),
+              foregroundPainter: CellsPainter(model.currentMatrixUniverse),
             ),
           ),
         ),
@@ -193,10 +147,30 @@ class _Board2 extends StatelessWidget {
   }
 }
 
-class CPainter extends CustomPainter {
+class CellsPainter extends CustomPainter {
+  final List<List<Cell>> matrix;
+
+  CellsPainter(this.matrix);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var eachRow in matrix) {
+      for (var eachCell in eachRow) {
+        if (eachCell.isAlive) canvas.drawRect(eachCell.rect, Paint()..color = Colors.blueAccent);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CellsPainter oldDelegate) {
+    return true;
+  }
+}
+
+class GridPainter extends CustomPainter {
   final BuildContext context;
 
-  CPainter(this.context);
+  GridPainter(this.context);
   @override
   void paint(Canvas canvas, Size size) {
     final ModelBoard model = Provider.of(context, listen: false);
@@ -214,7 +188,6 @@ class CPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
     return false;
   }
 }

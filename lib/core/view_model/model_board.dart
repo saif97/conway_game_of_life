@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:conway_game_of_life/src/cell.dart';
@@ -9,7 +10,7 @@ class ModelBoard extends ChangeNotifier {
   final int numOfRows = 50;
   late Timer _timer;
   int _speedMultiplier = 0;
-  // final Queue<Cell> queueCells = Queue();
+  // final Queue<Cell> queueAliveCells = Queue();
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
 
@@ -19,7 +20,8 @@ class ModelBoard extends ChangeNotifier {
   ModelBoard({bool randomly = false}) {
     _initialMatrixUniverse = getBoard(randomly: randomly);
     _currentMatrixUniverse = _initialMatrixUniverse;
-    print(_initialMatrixUniverse);
+
+    _currentMatrixUniverse = getBoard(randomly: true);
   }
 
   List<List<Cell>> getBoard({bool randomly = false}) {
@@ -28,11 +30,12 @@ class ModelBoard extends ChangeNotifier {
       numOfColumns,
       (eachCol) => List.generate(
         numOfRows,
-        (eachRow) => Cell(
-          randomly ? randomNumberGenerator.nextBool() : false,
-          upperLeftX: eachCol,
-          upperLeftY: eachRow,
-        ),
+        (eachRow) {
+          bool isAlive = randomly ? randomNumberGenerator.nextBool() : false;
+          final newCell = Cell(isAlive, upperLeftX: eachCol, upperLeftY: eachRow);
+          // if (isAlive) queueAliveCells.add(newCell);
+          return newCell;
+        },
       ),
     );
   }
@@ -48,8 +51,8 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void reset() {
-    _currentMatrixUniverse = _initialMatrixUniverse;
-    notifyListeners();
+    // _currentMatrixUniverse = _initialMatrixUniverse;
+    // notifyListeners();
   }
 
   void pause() {
@@ -57,10 +60,11 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void randomize() {
-    _initialMatrixUniverse = getBoard(randomly: true);
-    _currentMatrixUniverse = _initialMatrixUniverse;
+    // _initialMatrixUniverse = getBoard(randomly: true);
+    // _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
+// todo: use pop push instead of creating a new queue instance.
 // todo: clean this up
   updateCells() {
     List<List<Cell>> updatedCells = List<List<Cell>>.of(_currentMatrixUniverse.map((e) => e
@@ -83,6 +87,7 @@ class ModelBoard extends ChangeNotifier {
     _currentMatrixUniverse = updatedCells;
   }
 
+// todo: refactor this
   int _getAliveNeighbours(int col, int row) {
     int aliveNeighbours = 0;
     for (int rowSummand = -1; rowSummand <= 1; rowSummand++) {
