@@ -5,8 +5,8 @@ import 'package:conway_game_of_life/src/cell.dart';
 import 'package:flutter/material.dart';
 
 class ModelBoard extends ChangeNotifier {
-  int _numOfColumns = 50;
-  int _numOfRows = 50;
+  int _numOfColumns = 100;
+  int _numOfRows = 100;
   late Timer _timer;
   int _speedMultiplier = 0;
   // final Queue<Cell> queueAliveCells = Queue();

@@ -207,6 +207,10 @@ class _Board2 extends StatelessWidget {
     final ModelBoard model = Provider.of(context, listen: true);
     return Expanded(
       child: InteractiveViewer(
+        maxScale: 10,
+        minScale: .1,
+        boundaryMargin: const EdgeInsets.all(double.infinity),
+        constrained: false,
         child: Center(
           child: _KeyboardGestureControllers(
             child: CustomPaint(
