@@ -166,24 +166,27 @@ class _KeyboardGestureControllers extends StatelessWidget {
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context);
     FocusScope.of(context).requestFocus();
+
     return RawKeyboardListener(
       focusNode: FocusNode(),
       autofocus: true,
       onKey: (RawKeyEvent event) async {
         model.isModKeyPressed = event.isControlPressed;
       },
-      child: GestureDetector(
-        onPanUpdate: (v) {
-          if (model.isModKeyPressed) {
-            final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-            final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+      child: model.isModKeyPressed
+          ? GestureDetector(
+              onPanUpdate: (v) {
+                if (model.isModKeyPressed) {
+                  final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                  final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
-            model.setDrawPos(y, x);
-          }
-        },
-        onTapDown: (v) {},
-        child: child,
-      ),
+                  model.setDrawPos(y, x);
+                }
+              },
+              onTapDown: (v) {},
+              child: child,
+            )
+          : child,
     );
   }
 }
