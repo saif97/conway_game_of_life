@@ -1,5 +1,5 @@
+import 'package:conway_game_of_life/core/models/cell.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
-import 'package:conway_game_of_life/src/cell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +13,7 @@ class SubScreenBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ModelBoard(randomly: true)..play(),
-      child: _Main(),
+      child: const _Main(),
     );
   }
 }
@@ -23,14 +23,13 @@ class _Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          _Board2(),
+        children: const <Widget>[
+          _Board(),
           _Settings(),
           _Instructions(),
         ],
@@ -45,52 +44,49 @@ class _Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context, listen: false);
-    print('yooo updated');
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          TextButton(
-            child: Text("Reset"),
-            onPressed: model.reset,
-          ),
-          TextButton(
-            child: Text("Pause"),
-            onPressed: model.pause,
-          ),
-          TextButton(
-            child: Text("Play"),
-            onPressed: model.play,
-          ),
-          TextButton(
-            child: Text("Randomize"),
-            onPressed: model.randomize,
-          ),
-          Slider(
-            value: model.speedMultiplier.toDouble(),
-            onChanged: (v) => model.speedMultiplier = v.toInt(),
-            divisions: 6,
-            max: 3,
-            min: -3,
-            label: model.speedMultiplier.toString() + 'X',
-          ),
-          SetBoardSize(),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        TextButton(
+          onPressed: model.reset,
+          child: const Text("Reset"),
+        ),
+        TextButton(
+          onPressed: model.pause,
+          child: const Text("Pause"),
+        ),
+        TextButton(
+          onPressed: model.play,
+          child: const Text("Play"),
+        ),
+        TextButton(
+          onPressed: model.randomize,
+          child: const Text("Randomize"),
+        ),
+        Slider(
+          value: model.speedMultiplier.toDouble(),
+          onChanged: (v) => model.speedMultiplier = v.toInt(),
+          divisions: 6,
+          max: 3,
+          min: -3,
+          label: '${model.speedMultiplier}X',
+        ),
+        const SetBoardSize(),
+      ],
     );
   }
 }
 
 class SetBoardSize extends StatefulWidget {
-  SetBoardSize({Key? key}) : super(key: key);
+  const SetBoardSize({Key? key}) : super(key: key);
 
   @override
   _SetBoardSizeState createState() => _SetBoardSizeState();
 }
 
 class _SetBoardSizeState extends State<SetBoardSize> {
-  final contNumOfCols = TextEditingController();
-  final contNumOfRows = TextEditingController();
+  final contrNumOfCols = TextEditingController();
+  final contrNumOfRows = TextEditingController();
 
   @override
   void initState() {
@@ -99,33 +95,29 @@ class _SetBoardSizeState extends State<SetBoardSize> {
 
   @override
   Widget build(BuildContext context) {
-    final maxLength = 6;
     final ModelBoard model = Provider.of(context, listen: false);
 
-    if (contNumOfCols.text.isEmpty) contNumOfCols.text = model.numOfColumns.toString();
-    if (contNumOfRows.text.isEmpty) contNumOfRows.text = model.numOfRows.toString();
+    if (contrNumOfCols.text.isEmpty) contrNumOfCols.text = model.numOfColumns.toString();
+    if (contrNumOfRows.text.isEmpty) contrNumOfRows.text = model.numOfRows.toString();
 
-    return Container(
-      child: Row(
-        children: [
-          getTextField(contNumOfCols, 'Columns'),
-          Container(width: 15),
-          getTextField(contNumOfRows, "Rows"),
-          Container(width: 15),
-          TextButton(
-            child: Text('Set'),
-            onPressed: () {
-              model.setBoardSize(int.parse(contNumOfCols.text), int.parse(contNumOfRows.text));
-            },
-          )
-        ],
-      ),
+    return Row(
+      children: [
+        getTextField(contrNumOfCols, 'Columns'),
+        Container(width: 15),
+        getTextField(contrNumOfRows, "Rows"),
+        Container(width: 15),
+        TextButton(
+          onPressed: () =>
+              model.setBoardSize(int.parse(contrNumOfCols.text), int.parse(contrNumOfRows.text)),
+          child: const Text('Set'),
+        )
+      ],
     );
   }
 
   Widget getTextField(TextEditingController cont, String label) {
-    return Container(
-      width: 70,
+    return SizedBox(
+      width: 60,
       child: TextFormField(
         autovalidateMode: AutovalidateMode.onUserInteraction,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -136,9 +128,7 @@ class _SetBoardSizeState extends State<SetBoardSize> {
         decoration:
             InputDecoration(labelText: label, labelStyle: Theme.of(context).textTheme.caption),
         maxLength: 6,
-        maxLines: 1,
         keyboardType: TextInputType.number,
-        expands: false,
         controller: cont,
       ),
     );
@@ -146,9 +136,8 @@ class _SetBoardSizeState extends State<SetBoardSize> {
 
   @override
   void dispose() {
-    contNumOfCols.dispose();
-    contNumOfRows.dispose();
-
+    contrNumOfCols.dispose();
+    contrNumOfRows.dispose();
     super.dispose();
   }
 }
@@ -159,10 +148,10 @@ class _Instructions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       child: Row(
-        children: <Widget>[
-          Text('Ctrl/Cmd click hold to draw.'),
+        children: const <Widget>[
+          Text('click to pan. Ctrl/Cmd click or hold to draw.'),
         ],
       ),
     );
@@ -199,8 +188,8 @@ class _KeyboardGestureControllers extends StatelessWidget {
   }
 }
 
-class _Board2 extends StatelessWidget {
-  const _Board2({Key? key}) : super(key: key);
+class _Board extends StatelessWidget {
+  const _Board({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +204,7 @@ class _Board2 extends StatelessWidget {
           child: _KeyboardGestureControllers(
             child: CustomPaint(
               size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
-              painter: GridPainter(context),
+              painter: GridPainter(cols: model.numOfColumns, rows: model.numOfRows),
               foregroundPainter: CellsPainter(model.currentMatrixUniverse),
             ),
           ),
@@ -232,8 +221,8 @@ class CellsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var eachRow in matrix) {
-      for (var eachCell in eachRow) {
+    for (final eachRow in matrix) {
+      for (final eachCell in eachRow) {
         if (eachCell.isAlive) canvas.drawRect(eachCell.rect, Paint()..color = Colors.blueAccent);
       }
     }
@@ -246,14 +235,14 @@ class CellsPainter extends CustomPainter {
 }
 
 class GridPainter extends CustomPainter {
-  final BuildContext context;
+  final int cols, rows;
 
-  GridPainter(this.context);
+  GridPainter({required this.cols, required this.rows});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final ModelBoard model = Provider.of(context, listen: false);
-    for (var eachCol = 0; eachCol < model.numOfColumns; eachCol++) {
-      for (var eachRow = 0; eachRow < model.numOfRows; eachRow++) {
+    for (var eachCol = 0; eachCol < cols; eachCol++) {
+      for (var eachRow = 0; eachRow < rows; eachRow++) {
         canvas.drawRect(
           Cell.getRect(eachCol, eachRow),
           Paint()

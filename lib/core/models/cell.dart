@@ -11,18 +11,20 @@ class Cell {
       : rect = getRect(upperLeftX, upperLeftY);
 
   bool get isAlive => _isAlive;
-  die() => this._isAlive = false;
-  void revive() => this._isAlive = true;
+  void die() => _isAlive = false;
+  void revive() => _isAlive = true;
 
-  bool operator ==(otherCell) => otherCell is Cell && this.isAlive == otherCell.isAlive;
-
-  int get hashCode => this._isAlive.hashCode;
   @override
-  String toString() => (isAlive.toString() + "| X: $upperLeftX, Y:$upperLeftY | rect $rect");
+  bool operator ==(otherCell) => otherCell is Cell && isAlive == otherCell.isAlive;
+
+  @override
+  int get hashCode => _isAlive.hashCode;
+  @override
+  String toString() => "$isAlive${"| X: $upperLeftX, Y:$upperLeftY | rect $rect"}";
 
 // rects are simply rectangle Coordinates used to draw them using Custom Painter.
 // here using the col & row iteration will give the rect.
-  static Rect getRect(x, y) => Rect.fromPoints(
+  static Rect getRect(int x, int y) => Rect.fromPoints(
         Offset(x.toDouble(), y.toDouble()) * SQUARE_LENGTH,
         Offset(x.toDouble() + 1, y.toDouble() + 1) * SQUARE_LENGTH,
       );

@@ -9,11 +9,11 @@ class ScreenHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Game of Life"),
+        title: const Text("Game of Life"),
       ),
       body: ChangeNotifierProvider(
         create: (_) => HomeModel(),
-        child: _Main(),
+        child: const _Main(),
       ),
     );
   }
@@ -24,7 +24,6 @@ class _Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('reloaded');
-    return SubScreenBoard();
+    return const SubScreenBoard();
   }
 }
