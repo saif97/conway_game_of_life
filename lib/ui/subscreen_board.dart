@@ -44,35 +44,28 @@ class _Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context, listen: false);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        TextButton(
-          onPressed: model.reset,
-          child: const Text("Reset"),
-        ),
-        TextButton(
-          onPressed: model.pause,
-          child: const Text("Pause"),
-        ),
-        TextButton(
-          onPressed: model.play,
-          child: const Text("Play"),
-        ),
-        TextButton(
-          onPressed: model.randomize,
-          child: const Text("Randomize"),
-        ),
-        Slider(
-          value: model.speedMultiplier.toDouble(),
-          onChanged: (v) => model.speedMultiplier = v.toInt(),
-          divisions: 6,
-          max: 3,
-          min: -3,
-          label: '${model.speedMultiplier}X',
-        ),
-        const SetBoardSize(),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          TextButton(onPressed: model.reset, child: const Text("Reset")),
+          TextButton(onPressed: model.pause, child: const Text("Pause")),
+          TextButton(onPressed: model.play, child: const Text("Play")),
+          TextButton(
+              onPressed: () => model.initBoard(randomly: true), child: const Text("Randomize")),
+          TextButton(onPressed: () => model.initBoard(), child: const Text("Clear")),
+          Slider(
+            value: model.speedMultiplier.toDouble(),
+            onChanged: (v) => model.speedMultiplier = v.toInt(),
+            divisions: 6,
+            max: 3,
+            min: -3,
+            label: '${model.speedMultiplier}X',
+          ),
+          const SetBoardSize(),
+        ],
+      ),
     );
   }
 }
@@ -175,13 +168,17 @@ class _KeyboardGestureControllers extends StatelessWidget {
       },
       child: model.isModKeyPressed
           ? GestureDetector(
-              onPanUpdate: (v) {
-                if (model.isModKeyPressed) {
+              onTapUp: (v) {
                   final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-                  final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+                final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
-                  model.setDrawPos(y, x);
-                }
+                model.setDrawPos(y, x);
+              },
+              onPanUpdate: (v) {
+                final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+
+                model.setDrawPos(y, x);
               },
               onTapDown: (v) {},
               child: child,
@@ -189,6 +186,8 @@ class _KeyboardGestureControllers extends StatelessWidget {
           : child,
     );
   }
+
+  void registerClick(int x, int y) {}
 }
 
 class _Board extends StatelessWidget {

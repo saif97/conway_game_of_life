@@ -13,16 +13,15 @@ class ModelBoard extends ChangeNotifier {
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
 
-  bool isModKeyPressed = false;
+  bool _isModKeyPressed = false;
 
   ModelBoard({bool randomly = false}) {
-    _initialMatrixUniverse = getBoard(randomly: randomly);
-    _currentMatrixUniverse = _initialMatrixUniverse;
+    initBoard(randomly: randomly);
   }
 
-  List<List<Cell>> getBoard({bool randomly = false}) {
+  void initBoard({bool randomly = false}) {
     final randomNumberGenerator = Random();
-    return List.generate(
+    _initialMatrixUniverse = List.generate(
       _numOfColumns,
       (eachCol) => List.generate(
         _numOfRows,
@@ -34,6 +33,7 @@ class ModelBoard extends ChangeNotifier {
         },
       ),
     );
+    _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
   void play() {
@@ -52,11 +52,6 @@ class ModelBoard extends ChangeNotifier {
 
   void pause() {
     _timer.cancel();
-  }
-
-  void randomize() {
-    _initialMatrixUniverse = getBoard(randomly: true);
-    _currentMatrixUniverse = _initialMatrixUniverse;
   }
 
 // todo: use pop push instead of creating a new queue instance.
@@ -110,6 +105,7 @@ class ModelBoard extends ChangeNotifier {
   int get speedMultiplier => _speedMultiplier;
   int get numOfColumns => _numOfColumns;
   int get numOfRows => _numOfRows;
+  bool get isModKeyPressed => _isModKeyPressed;
 
   set speedMultiplier(int newValue) {
     if (newValue != _speedMultiplier) {
@@ -119,13 +115,19 @@ class ModelBoard extends ChangeNotifier {
     }
   }
 
+  set isModKeyPressed(bool newValue) {
+    if (newValue != _isModKeyPressed) {
+      _isModKeyPressed = newValue;
+      notifyListeners();
+    }
+  }
+
   void setBoardSize(int cols, int rows) {
     if (cols != _numOfColumns || rows != _numOfRows) {
       _numOfColumns = cols;
       _numOfRows = rows;
 
-      _initialMatrixUniverse = getBoard(randomly: true);
-      _currentMatrixUniverse = _initialMatrixUniverse;
+      initBoard(randomly: true);
 
       notifyListeners();
     }
@@ -135,5 +137,6 @@ class ModelBoard extends ChangeNotifier {
     if (x < 0 || y < 0 || x >= _numOfColumns || y >= _numOfRows) return;
 
     _currentMatrixUniverse[y][x].revive();
+    notifyListeners();
   }
 }
