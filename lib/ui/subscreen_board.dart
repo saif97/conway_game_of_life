@@ -64,6 +64,7 @@ class _Settings extends StatelessWidget {
             label: '${model.speedMultiplier}X',
           ),
           const SetBoardSize(),
+          TextButton(onPressed: model.pause, child: const Text("Save Block")),
         ],
       ),
     );
@@ -169,7 +170,7 @@ class _KeyboardGestureControllers extends StatelessWidget {
       child: model.isModKeyPressed
           ? GestureDetector(
               onTapUp: (v) {
-                  final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
                 final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
                 model.setDrawPos(y, x);
@@ -195,7 +196,6 @@ class _Board extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: true);
     return Expanded(
       child: InteractiveViewer(
         maxScale: 10,
@@ -204,10 +204,11 @@ class _Board extends StatelessWidget {
         constrained: false,
         child: Center(
           child: _KeyboardGestureControllers(
-            child: CustomPaint(
-              size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
-              painter: GridPainter(cols: model.numOfColumns, rows: model.numOfRows),
-              foregroundPainter: CellsPainter(model.currentMatrixUniverse),
+            child: Stack(
+              children: const [
+                _WGridPainter(),
+                _WCellsPrinter(),
+              ],
             ),
           ),
         ),
@@ -216,13 +217,47 @@ class _Board extends StatelessWidget {
   }
 }
 
+class _WGridPainter extends StatelessWidget {
+  const _WGridPainter({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // final ModelBoard model = Provider.of(context, listen: false);
+    return const RepaintBoundary(
+      child: CustomPaint(
+        isComplex: true,
+        painter: GridPainter(cols: 100, rows: 100),
+      ),
+    );
+  }
+}
+
+class _WCellsPrinter extends StatelessWidget {
+  const _WCellsPrinter({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<ModelBoard, List<List<Cell>>>(
+      selector: (_, model) => model.currentMatrixUniverse,
+      builder: (context, value, child) {
+        return CustomPaint(
+          painter: CellsPainter(value),
+          isComplex: true,
+          willChange: true,
+        );
+      },
+    );
+  }
+}
+
 class CellsPainter extends CustomPainter {
   final List<List<Cell>> matrix;
 
-  CellsPainter(this.matrix);
+  const CellsPainter(this.matrix);
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('cell');
     for (final eachRow in matrix) {
       for (final eachCell in eachRow) {
         if (eachCell.isAlive) canvas.drawRect(eachCell.rect, Paint()..color = Colors.blueAccent);
@@ -236,15 +271,19 @@ class CellsPainter extends CustomPainter {
   }
 }
 
+//todo: rows X cols calls every frame isn't scalable
 class GridPainter extends CustomPainter {
   final int cols, rows;
 
-  GridPainter({required this.cols, required this.rows});
+  const GridPainter({required this.cols, required this.rows});
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('grid');
+    int i = 0;
     for (var eachCol = 0; eachCol < cols; eachCol++) {
       for (var eachRow = 0; eachRow < rows; eachRow++) {
+        i++;
         canvas.drawRect(
           Cell.getRect(eachCol, eachRow),
           Paint()

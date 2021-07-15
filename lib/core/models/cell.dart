@@ -13,6 +13,7 @@ class Cell {
   bool get isAlive => _isAlive;
   void die() => _isAlive = false;
   void revive() => _isAlive = true;
+  void switchState() => _isAlive = !_isAlive;
 
   @override
   bool operator ==(otherCell) => otherCell is Cell && isAlive == otherCell.isAlive;

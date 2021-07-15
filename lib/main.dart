@@ -1,5 +1,7 @@
-import 'package:conway_game_of_life/ui/screen_home.dart';
+import 'package:conway_game_of_life/playground.dart';
 import 'package:flutter/material.dart';
+
+import 'ui/screen_home.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,6 +14,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: ScreenHome(),
+      // home: ScreenPlayGround(),
     );
   }
 }

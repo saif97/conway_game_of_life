@@ -13,6 +13,8 @@ class ModelBoard extends ChangeNotifier {
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
 
+  Canvas? canvasBoardGrid;
+
   bool _isModKeyPressed = false;
 
   ModelBoard({bool randomly = false}) {
@@ -136,7 +138,7 @@ class ModelBoard extends ChangeNotifier {
   void setDrawPos(int x, int y) {
     if (x < 0 || y < 0 || x >= _numOfColumns || y >= _numOfRows) return;
 
-    _currentMatrixUniverse[y][x].revive();
+    _currentMatrixUniverse[y][x].switchState();
     notifyListeners();
   }
 }
