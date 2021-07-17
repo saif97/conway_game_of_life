@@ -1,4 +1,5 @@
 import 'package:conway_game_of_life/core/view_model/home_model.dart';
+import 'package:conway_game_of_life/ui/sub_block_explorer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:split_view/split_view.dart';
@@ -34,9 +35,9 @@ class _Main extends StatelessWidget {
         viewMode: SplitViewMode.Horizontal,
         isActive: true,
       ),
-      children: [
-        Container(),
-        const SubScreenBoard(),
+      children: const [
+        SubBlockExplorer(),
+        SubScreenBoard(),
       ],
     );
   }

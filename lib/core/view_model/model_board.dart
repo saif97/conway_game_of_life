@@ -1,19 +1,20 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:conway_game_of_life/core/models/cell.dart';
 import 'package:flutter/material.dart';
 
+// todo: the class should be immutable.
 class ModelBoard extends ChangeNotifier {
   int _numOfColumns = 100;
   int _numOfRows = 100;
   late Timer _timer;
   int _speedMultiplier = 0;
-  // final Queue<Cell> queueAliveCells = Queue();
+  // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
+  Queue<Cell> queueAliveCells = Queue();
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
-
-  Canvas? canvasBoardGrid;
 
   bool _isModKeyPressed = false;
 
@@ -42,6 +43,7 @@ class ModelBoard extends ChangeNotifier {
     final updateRate = 50 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
       updateCells();
+      // print('updated');
 
       notifyListeners();
     });
@@ -63,16 +65,20 @@ class ModelBoard extends ChangeNotifier {
         .map<Cell>((e) => Cell(e.isAlive, upperLeftX: e.upperLeftX, upperLeftY: e.upperLeftY))
         .toList()));
 
+    queueAliveCells = Queue();
+
     for (int col = 0; col < _numOfColumns; col++) {
       for (int row = 0; row < _numOfRows; row++) {
         final int aliveNeighbors = _getAliveNeighbors(col, row);
         final bool isCurrentCellAlive = _currentMatrixUniverse[col][row].isAlive;
-
+        final updatedCell = updatedCells[col][row];
         if (!isCurrentCellAlive && aliveNeighbors == 3) {
-          updatedCells[col][row].revive();
+          updatedCell.revive();
         } else if (isCurrentCellAlive && aliveNeighbors != 2 && aliveNeighbors != 3) {
-          updatedCells[col][row].die();
+          updatedCell.die();
         }
+
+        if (updatedCell.isAlive == true) queueAliveCells.add(updatedCell);
       }
     }
 
@@ -138,7 +144,32 @@ class ModelBoard extends ChangeNotifier {
   void setDrawPos(int x, int y) {
     if (x < 0 || y < 0 || x >= _numOfColumns || y >= _numOfRows) return;
 
-    _currentMatrixUniverse[y][x].switchState();
+    final updatedCell = _currentMatrixUniverse[y][x];
+    updatedCell.switchState();
+    if (updatedCell.isAlive) {
+      // have to re-assign it to new value otherwise selector won't get triggered.
+      queueAliveCells = Queue()
+        ..addAll(queueAliveCells)
+        ..add(updatedCell);
+    } else {
+      queueAliveCells = Queue()
+        ..addAll(queueAliveCells)
+        ..remove(updatedCell);
+    }
     notifyListeners();
+  }
+
+  void saveBlock() {
+    // don't save blocks of size bigger than 10 X 10
+    if (_numOfColumns > 10 && _numOfRows > 10) {
+      print('Block is too big to save');
+      return;
+    }
+
+    final out = _currentMatrixUniverse
+        .map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList())
+        .toList();
+
+    print(out);
   }
 }

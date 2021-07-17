@@ -1,8 +1,11 @@
+import 'dart:collection';
+
 import 'package:conway_game_of_life/core/models/cell.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 
 const double SQUARE_LENGTH = 15;
 
@@ -64,7 +67,7 @@ class _Settings extends StatelessWidget {
             label: '${model.speedMultiplier}X',
           ),
           const SetBoardSize(),
-          TextButton(onPressed: model.pause, child: const Text("Save Block")),
+          TextButton(onPressed: model.saveBlock, child: const Text("Save Block")),
         ],
       ),
     );
@@ -145,7 +148,8 @@ class _Instructions extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       child: Row(
         children: const <Widget>[
-          Text('click to pan. Ctrl/Cmd click or hold to draw.'),
+          Text(
+              'click to pan. Ctrl/Cmd click or hold to draw. | Only board of size 10 X 10 is supported.'),
         ],
       ),
     );
@@ -161,30 +165,44 @@ class _KeyboardGestureControllers extends StatelessWidget {
     final ModelBoard model = Provider.of(context);
     FocusScope.of(context).requestFocus();
 
-    return RawKeyboardListener(
-      focusNode: FocusNode(),
-      autofocus: true,
-      onKey: (RawKeyEvent event) async {
-        model.isModKeyPressed = event.isControlPressed;
-      },
-      child: model.isModKeyPressed
-          ? GestureDetector(
-              onTapUp: (v) {
-                final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-                final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+    return InteractiveViewer(
+      maxScale: 10,
+      minScale: .1,
+      boundaryMargin: const EdgeInsets.all(double.infinity),
+      constrained: false,
+      child: RawKeyboardListener(
+        focusNode: FocusNode(),
+        autofocus: true,
+        onKey: (RawKeyEvent event) {
+          model.isModKeyPressed = event.isControlPressed;
+        },
+        child: MouseRegion(
+          onEnter: (v) {},
+          onExit: (v) {},
+          onHover: (v) {
+            final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+            final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+          },
+          child: model.isModKeyPressed
+              ? GestureDetector(
+                  onTapUp: (v) {
+                    final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                    final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+                    print('toped');
+                    model.setDrawPos(y, x);
+                  },
+                  onPanUpdate: (v) {
+                    final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                    final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
-                model.setDrawPos(y, x);
-              },
-              onPanUpdate: (v) {
-                final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-                final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
-
-                model.setDrawPos(y, x);
-              },
-              onTapDown: (v) {},
-              child: child,
-            )
-          : child,
+                    model.setDrawPos(y, x);
+                  },
+                  onTapDown: (v) {},
+                  child: child,
+                )
+              : child,
+        ),
+      ),
     );
   }
 
@@ -197,13 +215,10 @@ class _Board extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InteractiveViewer(
-        maxScale: 10,
-        minScale: .1,
-        boundaryMargin: const EdgeInsets.all(double.infinity),
-        constrained: false,
+      child: _KeyboardGestureControllers(
         child: Center(
-          child: _KeyboardGestureControllers(
+          child: MouseRegion(
+            cursor: MouseCursor.defer,
             child: Stack(
               children: const [
                 _WGridPainter(),
@@ -222,46 +237,54 @@ class _WGridPainter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final ModelBoard model = Provider.of(context, listen: false);
-    return const RepaintBoundary(
-      child: CustomPaint(
-        isComplex: true,
-        painter: GridPainter(cols: 100, rows: 100),
+    final ModelBoard model = Provider.of(context, listen: false);
+    return RepaintBoundary(
+      child: Selector<ModelBoard, Tuple2<int, int>>(
+        builder: (context, tuple, child) => CustomPaint(
+          size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+          isComplex: true,
+          painter: GridPainter(cols: tuple.item1, rows: tuple.item2),
+        ),
+        selector: (_, model) => Tuple2(model.numOfColumns, model.numOfRows),
       ),
     );
   }
 }
+
+// todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
 
 class _WCellsPrinter extends StatelessWidget {
   const _WCellsPrinter({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ModelBoard, List<List<Cell>>>(
-      selector: (_, model) => model.currentMatrixUniverse,
-      builder: (context, value, child) {
-        return CustomPaint(
-          painter: CellsPainter(value),
-          isComplex: true,
-          willChange: true,
-        );
-      },
+    final ModelBoard model = Provider.of(context, listen: false);
+    return RepaintBoundary(
+      child: Selector<ModelBoard, Queue<Cell>>(
+        selector: (_, model) => model.queueAliveCells,
+        builder: (context, value, child) {
+          return CustomPaint(
+            size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+            painter: CellsPainter(value),
+            isComplex: true,
+            willChange: true,
+          );
+        },
+      ),
     );
   }
 }
 
 class CellsPainter extends CustomPainter {
-  final List<List<Cell>> matrix;
+  final Queue<Cell> queueAliveCells;
 
-  const CellsPainter(this.matrix);
+  const CellsPainter(this.queueAliveCells);
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('cell');
-    for (final eachRow in matrix) {
-      for (final eachCell in eachRow) {
-        if (eachCell.isAlive) canvas.drawRect(eachCell.rect, Paint()..color = Colors.blueAccent);
-      }
+    print('cell painted');
+    for (final cell in queueAliveCells) {
+      if (cell.isAlive) canvas.drawRect(cell.rect, Paint()..color = Colors.blueAccent);
     }
   }
 
@@ -271,7 +294,8 @@ class CellsPainter extends CustomPainter {
   }
 }
 
-//todo: rows X cols calls every frame isn't scalable
+// todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
+
 class GridPainter extends CustomPainter {
   final int cols, rows;
 
@@ -279,11 +303,9 @@ class GridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('grid');
-    int i = 0;
+      print('grid painted');
     for (var eachCol = 0; eachCol < cols; eachCol++) {
       for (var eachRow = 0; eachRow < rows; eachRow++) {
-        i++;
         canvas.drawRect(
           Cell.getRect(eachCol, eachRow),
           Paint()
@@ -296,6 +318,6 @@ class GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+    return true;
   }
 }
