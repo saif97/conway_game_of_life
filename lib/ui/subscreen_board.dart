@@ -262,6 +262,7 @@ class _WCellsPrinter extends StatelessWidget {
     return RepaintBoundary(
       child: Selector<ModelBoard, Queue<Cell>>(
         selector: (_, model) => model.queueAliveCells,
+        shouldRebuild: (previous, next) => true,
         builder: (context, value, child) {
           return CustomPaint(
             size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
@@ -303,7 +304,7 @@ class GridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-      print('grid painted');
+    print('grid painted');
     for (var eachCol = 0; eachCol < cols; eachCol++) {
       for (var eachRow = 0; eachRow < rows; eachRow++) {
         canvas.drawRect(
