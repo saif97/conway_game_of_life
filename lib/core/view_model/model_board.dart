@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:conway_game_of_life/core/dart_extensions.dart';
+import 'package:conway_game_of_life/core/models/block.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
+import 'package:conway_game_of_life/core/saved_blocks.dart';
 import 'package:flutter/material.dart';
 
 // todo: the class should be immutable.
@@ -16,7 +19,11 @@ class ModelBoard extends ChangeNotifier {
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
 
+  late Block _insertedBlock = listBlocks[0];
+
   bool _isModKeyPressed = false;
+  bool _isModeInsertBlock = false;
+  Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = false}) {
     initBoard(randomly: randomly);
@@ -109,11 +116,48 @@ class ModelBoard extends ChangeNotifier {
     return aliveNeighbours;
   }
 
+  void confirmBlockInsertion() {
+    for (var eachCol = 0; eachCol < _insertedBlock.cols; eachCol++) {
+      for (var eachRow = 0; eachRow < _insertedBlock.rows; eachRow++) {
+        final eachBlockCellState = _insertedBlock.matrixBlock[eachCol][eachRow];
+        final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
+        final eachUniverseCell = _currentMatrixUniverse[posInUniverse.dxInt][posInUniverse.dyInt];
+
+        if (eachBlockCellState) {
+          eachUniverseCell.revive();
+          queueAliveCells.add(eachUniverseCell);
+        } else {
+          eachUniverseCell.die();
+          queueAliveCells.remove(eachUniverseCell);
+        }
+      }
+    }
+  }
+
+  void enableBlockInsertionMode(Block block) {
+    _isModeInsertBlock = true;
+    _insertedBlock = block;
+    pause();
+  }
+
+  void disableBlockInsertionMode() {
+    _isModeInsertBlock = false;
+    play();
+  }
+
+  /*********************
+   * GETTERS & SETTERS *
+   *********************/
+
   List<List<Cell>> get currentMatrixUniverse => _currentMatrixUniverse;
   int get speedMultiplier => _speedMultiplier;
   int get numOfColumns => _numOfColumns;
   int get numOfRows => _numOfRows;
   bool get isModKeyPressed => _isModKeyPressed;
+
+  bool get isModeInsertBlock => _isModeInsertBlock;
+  Block get insertedBlock => _insertedBlock;
+  Offset get mousePosInBoard => _mousePosInBoard;
 
   set speedMultiplier(int newValue) {
     if (newValue != _speedMultiplier) {
@@ -141,10 +185,20 @@ class ModelBoard extends ChangeNotifier {
     }
   }
 
-  void setDrawPos(int x, int y) {
-    if (x < 0 || y < 0 || x >= _numOfColumns || y >= _numOfRows) return;
+  set mousePosInBoard(Offset newPos) {
+    if (_isWithinBoard(newPos)) return;
+    if (_mousePosInBoard == newPos) return;
 
-    final updatedCell = _currentMatrixUniverse[y][x];
+    _mousePosInBoard = newPos;
+    print(_mousePosInBoard);
+
+    notifyListeners();
+  }
+
+  void setDrawPos(Offset newPos) {
+    if (_isWithinBoard(newPos)) return;
+
+    final updatedCell = _currentMatrixUniverse[newPos.dxInt][newPos.dyInt];
     updatedCell.switchState();
     // have to re-assign it to new value otherwise selector won't get triggered.
     if (updatedCell.isAlive)
@@ -154,6 +208,9 @@ class ModelBoard extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  bool _isWithinBoard(Offset pos) =>
+      pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
 
   void saveBlock() {
     // don't save blocks of size bigger than 10 X 10

@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
@@ -11,18 +12,6 @@ const double SQUARE_LENGTH = 15;
 
 class SubScreenBoard extends StatelessWidget {
   const SubScreenBoard({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ModelBoard(randomly: true)..play(),
-      child: const _Main(),
-    );
-  }
-}
-
-class _Main extends StatelessWidget {
-  const _Main({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +138,7 @@ class _Instructions extends StatelessWidget {
       child: Row(
         children: const <Widget>[
           Text(
-              'click to pan. Ctrl/Cmd click or hold to draw. | Only board of size 10 X 10 is supported.'),
+              'click to pan. Ctrl/Cmd click or hold to draw or release block. | Only block of size 10 X 10 can be saved. | Esc to cancel.'),
         ],
       ),
     );
@@ -175,27 +164,36 @@ class _KeyboardGestureControllers extends StatelessWidget {
         autofocus: true,
         onKey: (RawKeyEvent event) {
           model.isModKeyPressed = event.isControlPressed;
+          if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+            model.disableBlockInsertionMode();
+          }
         },
         child: MouseRegion(
           onEnter: (v) {},
           onExit: (v) {},
           onHover: (v) {
-            final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-            final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+            if (model.isModeInsertBlock) {
+              final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+              final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+              model.mousePosInBoard = OffsetInt.fromInt(x, y);
+            }
           },
           child: model.isModKeyPressed
               ? GestureDetector(
                   onTapUp: (v) {
-                    final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
-                    final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
-                    print('toped');
-                    model.setDrawPos(y, x);
+                    if (model.isModeInsertBlock) {
+                      model.confirmBlockInsertion();
+                    } else {
+                      final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
+                      final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
+                      model.setDrawPos(OffsetInt.fromInt(x, y));
+                    }
                   },
                   onPanUpdate: (v) {
                     final int x = v.localPosition.dx ~/ SQUARE_LENGTH;
                     final int y = v.localPosition.dy ~/ SQUARE_LENGTH;
 
-                    model.setDrawPos(y, x);
+                    model.setDrawPos(OffsetInt.fromInt(x, y));
                   },
                   onTapDown: (v) {},
                   child: child,
@@ -217,18 +215,116 @@ class _Board extends StatelessWidget {
     return Expanded(
       child: _KeyboardGestureControllers(
         child: Center(
-          child: MouseRegion(
-            cursor: MouseCursor.defer,
-            child: Stack(
-              children: const [
-                _WGridPainter(),
-                _WCellsPrinter(),
+          child: Selector<ModelBoard, bool>(
+            selector: (_, model) => model.isModeInsertBlock,
+            builder: (context, value, child) => Stack(
+              children: [
+                const _WGridPainter(),
+                const _WCellsPrinter(),
+                if (value) const _WInsertedBlockPainter(),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+// todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
+
+class _WCellsPrinter extends StatelessWidget {
+  const _WCellsPrinter({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final ModelBoard model = Provider.of(context, listen: false);
+    return RepaintBoundary(
+      child: Selector<ModelBoard, Queue<Cell>>(
+        selector: (_, model) => model.queueAliveCells,
+        // keep simulating even if there's a Repletion. otherwise in case of queue having the same values selector won't trigger.
+        shouldRebuild: (previous, next) => true,
+        builder: (context, value, child) {
+          return CustomPaint(
+            size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+            painter: CellsPainter(value),
+            isComplex: true,
+            willChange: true,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CellsPainter extends CustomPainter {
+  final Queue<Cell> queueAliveCells;
+
+  const CellsPainter(this.queueAliveCells);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final cell in queueAliveCells) {
+      if (cell.isAlive) canvas.drawRect(cell.rect, Paint()..color = Colors.blueAccent);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CellsPainter oldDelegate) {
+    return true;
+  }
+}
+
+// todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
+
+class _WInsertedBlockPainter extends StatelessWidget {
+  const _WInsertedBlockPainter({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final ModelBoard model = Provider.of(context, listen: false);
+    return RepaintBoundary(
+      child: Selector<ModelBoard, Offset>(
+        selector: (_, model) => model.mousePosInBoard,
+        builder: (context, value, child) => CustomPaint(
+          size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+          painter: InsertedBlockPainter(context),
+          isComplex: true,
+          willChange: true,
+        ),
+      ),
+    );
+  }
+}
+
+class InsertedBlockPainter extends CustomPainter {
+  final BuildContext context;
+
+  const InsertedBlockPainter(this.context);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ModelBoard model = Provider.of(context, listen: false);
+    final block = model.insertedBlock;
+    final mousePos = model.mousePosInBoard;
+
+    print('insreted');
+    for (var eachCol = 0; eachCol < block.cols; eachCol++) {
+      for (var eachRow = 0; eachRow < block.rows; eachRow++) {
+        final eachCellState = block.matrixBlock[eachCol][eachRow];
+        if (eachCellState)
+          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt),
+              Paint()..color = Colors.greenAccent);
+        else
+          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt),
+              Paint()..color = Colors.redAccent);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant InsertedBlockPainter oldDelegate) {
+    return true;
   }
 }
 
@@ -253,50 +349,6 @@ class _WGridPainter extends StatelessWidget {
 
 // todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
 
-class _WCellsPrinter extends StatelessWidget {
-  const _WCellsPrinter({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: false);
-    return RepaintBoundary(
-      child: Selector<ModelBoard, Queue<Cell>>(
-        selector: (_, model) => model.queueAliveCells,
-        shouldRebuild: (previous, next) => true,
-        builder: (context, value, child) {
-          return CustomPaint(
-            size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
-            painter: CellsPainter(value),
-            isComplex: true,
-            willChange: true,
-          );
-        },
-      ),
-    );
-  }
-}
-
-class CellsPainter extends CustomPainter {
-  final Queue<Cell> queueAliveCells;
-
-  const CellsPainter(this.queueAliveCells);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    print('cell painted');
-    for (final cell in queueAliveCells) {
-      if (cell.isAlive) canvas.drawRect(cell.rect, Paint()..color = Colors.blueAccent);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CellsPainter oldDelegate) {
-    return true;
-  }
-}
-
-// todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
-
 class GridPainter extends CustomPainter {
   final int cols, rows;
 
@@ -304,7 +356,6 @@ class GridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('grid painted');
     for (var eachCol = 0; eachCol < cols; eachCol++) {
       for (var eachRow = 0; eachRow < rows; eachRow++) {
         canvas.drawRect(

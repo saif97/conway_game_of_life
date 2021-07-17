@@ -8,13 +8,13 @@ class SubBlockExplorer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final ModelBoard model = Provider.of(context, listen: false);
+    final ModelBoard model = Provider.of(context, listen: false);
     return ListView.builder(
       itemBuilder: (context, index) {
         final block = listBlocks[index];
         return ListTile(
           onTap: () {
-            // model.pause();
+            model.enableBlockInsertionMode(block);
           },
           title: Text(block.name),
           subtitle: Text(block.des),

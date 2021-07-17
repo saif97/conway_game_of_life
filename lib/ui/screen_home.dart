@@ -1,4 +1,4 @@
-import 'package:conway_game_of_life/core/view_model/home_model.dart';
+import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:conway_game_of_life/ui/sub_block_explorer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +14,7 @@ class ScreenHome extends StatelessWidget {
         title: const Text("Game of Life"),
       ),
       body: ChangeNotifierProvider(
-        create: (_) => HomeModel(),
+        create: (_) => ModelBoard(randomly: true)..play(),
         child: const _Main(),
       ),
     );
