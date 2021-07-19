@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 class ModelBoard extends ChangeNotifier {
   int _numOfColumns = 100;
   int _numOfRows = 100;
-  late Timer _timer;
+  Timer? _timer;
   int _speedMultiplier = 0;
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
   final Queue<Cell> queueAliveCells = Queue();
@@ -47,22 +47,26 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void play() {
+    _timer?.cancel();
     final updateRate = 50 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
       updateCells();
-      /*print('updated');*/
 
       notifyListeners();
     });
   }
 
-  void reset() {
+  void saveState() {
+    _initialMatrixUniverse = _currentMatrixUniverse;
+  }
+
+  void restoreState() {
     _currentMatrixUniverse = _initialMatrixUniverse;
     notifyListeners();
   }
 
   void pause() {
-    _timer.cancel();
+    _timer?.cancel();
   }
 
 // todo: use pop push instead of creating a new queue instance.
@@ -190,7 +194,6 @@ class ModelBoard extends ChangeNotifier {
     if (_mousePosInBoard == newPos) return;
 
     _mousePosInBoard = newPos;
-    print(_mousePosInBoard);
 
     notifyListeners();
   }

@@ -41,7 +41,8 @@ class _Settings extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TextButton(onPressed: model.reset, child: const Text("Reset")),
+          TextButton(onPressed: model.saveState, child: const Text("Save State")),
+          TextButton(onPressed: model.restoreState, child: const Text("Restore State")),
           TextButton(onPressed: model.pause, child: const Text("Pause")),
           TextButton(onPressed: model.play, child: const Text("Play")),
           TextButton(
@@ -308,7 +309,6 @@ class InsertedBlockPainter extends CustomPainter {
     final block = model.insertedBlock;
     final mousePos = model.mousePosInBoard;
 
-    print('insreted');
     for (var eachCol = 0; eachCol < block.cols; eachCol++) {
       for (var eachRow = 0; eachRow < block.rows; eachRow++) {
         final eachCellState = block.matrixBlock[eachCol][eachRow];

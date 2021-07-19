@@ -50,5 +50,6 @@
         "**/.project": true,
         "**/.settings": true,
         "**/.factorypath": true
-    }
+    },
+    "python.pythonPath": "/Users/saif/.pyenv/versions/3.8.0/bin/python"
 }
