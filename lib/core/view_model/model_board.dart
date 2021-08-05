@@ -3,30 +3,42 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
+import 'package:conway_game_of_life/core/hashlife/universe_hashlife.dart';
 import 'package:conway_game_of_life/core/models/block.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
+import 'package:conway_game_of_life/core/optimized_GoL/universe.dart';
 import 'package:conway_game_of_life/core/saved_blocks.dart';
 import 'package:flutter/material.dart';
 
 // todo: the class should be immutable.
 class ModelBoard extends ChangeNotifier {
-  int _numOfColumns = 100;
-  int _numOfRows = 100;
+  late final Universe universe;
+  late int _numOfColumns;
+  late int _numOfRows;
+  int _universeSizeExponent = 3;
   Timer? _timer;
   int _speedMultiplier = 0;
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
   final Queue<Cell> queueAliveCells = Queue();
+  Queue<Offset> queueHashlifeCells = Queue();
   late List<List<Cell>> _currentMatrixUniverse;
   late List<List<Cell>> _initialMatrixUniverse;
 
   late Block _insertedBlock = listBlocks[0];
+
+  late final HashlifeUniverse _hashlifeUniverse;
 
   bool _isModKeyPressed = false;
   bool _isModeInsertBlock = false;
   Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = false}) {
-    initBoard(randomly: randomly);
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: true);
+    _numOfColumns = pow(2, _universeSizeExponent).toInt();
+    _numOfRows = _numOfColumns;
+
+    // initBoard(randomly: randomly);
+    // universe = Universe(rows: _numOfRows, cols: _numOfColumns)..randomizeUniverse();
   }
 
   void initBoard({bool randomly = false}) {
@@ -48,9 +60,10 @@ class ModelBoard extends ChangeNotifier {
 
   void play() {
     _timer?.cancel();
-    final updateRate = 50 + (speedMultiplier * 10);
+    final updateRate = 500 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
-      updateCells();
+      // updateCells();
+      queueHashlifeCells = _hashlifeUniverse.stepOneGeneration();
 
       notifyListeners();
     });
@@ -72,9 +85,8 @@ class ModelBoard extends ChangeNotifier {
 // todo: use pop push instead of creating a new queue instance.
 // todo: clean this up
   void updateCells() {
-    final List<List<Cell>> updatedCells = List<List<Cell>>.of(_currentMatrixUniverse.map((e) => e
-        .map<Cell>((e) => Cell(e.isAlive, upperLeftX: e.upperLeftX, upperLeftY: e.upperLeftY))
-        .toList()));
+    final List<List<Cell>> updatedCells = List<List<Cell>>.of(
+        _currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive, upperLeftX: e.upperLeftX, upperLeftY: e.upperLeftY)).toList()));
 
     queueAliveCells.clear();
 
@@ -103,15 +115,11 @@ class ModelBoard extends ChangeNotifier {
       for (int colSummand = -1; colSummand <= 1; colSummand++) {
         final neighbourCellRow = row + rowSummand;
         final neighbourCellColumn = col + colSummand;
-        final bool isOutOfRange = neighbourCellRow < 0 ||
-            neighbourCellRow > (_numOfRows - 1) ||
-            neighbourCellColumn < 0 ||
-            neighbourCellColumn > (_numOfColumns - 1);
+        final bool isOutOfRange =
+            neighbourCellRow < 0 || neighbourCellRow > (_numOfRows - 1) || neighbourCellColumn < 0 || neighbourCellColumn > (_numOfColumns - 1);
         final bool isNeighbourCell = rowSummand != 0 || colSummand != 0;
 
-        if (!isOutOfRange &&
-            isNeighbourCell &&
-            _currentMatrixUniverse[neighbourCellColumn][neighbourCellRow].isAlive) {
+        if (!isOutOfRange && isNeighbourCell && _currentMatrixUniverse[neighbourCellColumn][neighbourCellRow].isAlive) {
           aliveNeighbours++;
         }
       }
@@ -212,8 +220,7 @@ class ModelBoard extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _isWithinBoard(Offset pos) =>
-      pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
+  bool _isWithinBoard(Offset pos) => pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
 
   void saveBlock() {
     // don't save blocks of size bigger than 10 X 10
@@ -222,10 +229,12 @@ class ModelBoard extends ChangeNotifier {
       return;
     }
 
-    final out = _currentMatrixUniverse
-        .map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList())
-        .toList();
+    final out = _currentMatrixUniverse.map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList()).toList();
 
     print(out);
   }
+
+  get getUniverseSizeExponent => this._universeSizeExponent;
+
+  set setUniverseSizeExponent(universeSizeExponent) => this._universeSizeExponent = universeSizeExponent;
 }

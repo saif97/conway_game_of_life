@@ -1,5 +1,9 @@
+// @dart=2.9
+
 import 'package:conway_game_of_life/playground.dart';
 import 'package:flutter/material.dart';
+
+import 'ui/screen_home.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,8 +15,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      // home: ScreenHome(),
-      home: const ScreenPlayGround(),
+      home: ScreenHome(),
+      // home: const ScreenPlayGround(),
     );
   }
 }

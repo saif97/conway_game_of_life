@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
+import 'package:conway_game_of_life/core/utils.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -45,8 +46,7 @@ class _Settings extends StatelessWidget {
           TextButton(onPressed: model.restoreState, child: const Text("Restore State")),
           TextButton(onPressed: model.pause, child: const Text("Pause")),
           TextButton(onPressed: model.play, child: const Text("Play")),
-          TextButton(
-              onPressed: () => model.initBoard(randomly: true), child: const Text("Randomize")),
+          TextButton(onPressed: () => model.initBoard(randomly: true), child: const Text("Randomize")),
           TextButton(onPressed: () => model.initBoard(), child: const Text("Clear")),
           Slider(
             value: model.speedMultiplier.toDouble(),
@@ -94,8 +94,7 @@ class _SetBoardSizeState extends State<SetBoardSize> {
         getTextField(contrNumOfRows, "Rows"),
         Container(width: 15),
         TextButton(
-          onPressed: () =>
-              model.setBoardSize(int.parse(contrNumOfCols.text), int.parse(contrNumOfRows.text)),
+          onPressed: () => model.setBoardSize(int.parse(contrNumOfCols.text), int.parse(contrNumOfRows.text)),
           child: const Text('Set'),
         )
       ],
@@ -112,8 +111,7 @@ class _SetBoardSizeState extends State<SetBoardSize> {
           // in the case that value is not an int
           return int.tryParse(value ?? '') != null ? null : value;
         },
-        decoration:
-            InputDecoration(labelText: label, labelStyle: Theme.of(context).textTheme.caption),
+        decoration: InputDecoration(labelText: label, labelStyle: Theme.of(context).textTheme.caption),
         maxLength: 6,
         keyboardType: TextInputType.number,
         controller: cont,
@@ -136,11 +134,13 @@ class _Instructions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Row(
-        children: const <Widget>[
-          Text(
-              'click to pan. Ctrl/Cmd click or hold to draw or release block. | Only block of size 10 X 10 can be saved. | Esc to cancel.'),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: const <Widget>[
+            Text('click to pan. Ctrl/Cmd click or hold to draw or release block. | Only block of size 10 X 10 can be saved. | Esc to cancel.'),
+          ],
+        ),
       ),
     );
   }
@@ -221,6 +221,7 @@ class _Board extends StatelessWidget {
             builder: (context, value, child) => Stack(
               children: [
                 const _WGridPainter(),
+                // const RepaintBoundary(child: WidUniverse()),
                 const _WCellsPrinter(),
                 if (value) const _WInsertedBlockPainter(),
               ],
@@ -241,8 +242,8 @@ class _WCellsPrinter extends StatelessWidget {
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context, listen: false);
     return RepaintBoundary(
-      child: Selector<ModelBoard, Queue<Cell>>(
-        selector: (_, model) => model.queueAliveCells,
+      child: Selector<ModelBoard, Queue<Offset>>(
+        selector: (_, model) => model.queueHashlifeCells,
         // keep simulating even if there's a Repletion. otherwise in case of queue having the same values selector won't trigger.
         shouldRebuild: (previous, next) => true,
         builder: (context, value, child) {
@@ -259,14 +260,14 @@ class _WCellsPrinter extends StatelessWidget {
 }
 
 class CellsPainter extends CustomPainter {
-  final Queue<Cell> queueAliveCells;
+  final Queue<Offset> queueAliveCells;
 
   const CellsPainter(this.queueAliveCells);
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final cell in queueAliveCells) {
-      if (cell.isAlive) canvas.drawRect(cell.rect, Paint()..color = Colors.blueAccent);
+      canvas.drawRect(getRect(cell.dxInt, cell.dyInt), Paint()..color = Colors.blueAccent);
     }
   }
 
@@ -313,11 +314,9 @@ class InsertedBlockPainter extends CustomPainter {
       for (var eachRow = 0; eachRow < block.rows; eachRow++) {
         final eachCellState = block.matrixBlock[eachCol][eachRow];
         if (eachCellState)
-          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt),
-              Paint()..color = Colors.greenAccent);
+          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt), Paint()..color = Colors.greenAccent);
         else
-          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt),
-              Paint()..color = Colors.redAccent);
+          canvas.drawRect(Cell.getRect(eachCol + mousePos.dxInt, eachRow + mousePos.dyInt), Paint()..color = Colors.redAccent);
       }
     }
   }

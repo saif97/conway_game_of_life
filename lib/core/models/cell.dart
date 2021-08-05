@@ -7,8 +7,7 @@ class Cell {
   bool _isAlive;
 
   // Cell(this._isAlive, );
-  Cell(this._isAlive, {required this.upperLeftX, required this.upperLeftY})
-      : rect = getRect(upperLeftX, upperLeftY);
+  Cell(this._isAlive, {required this.upperLeftX, required this.upperLeftY}) : rect = getRect(upperLeftX, upperLeftY);
 
   bool get isAlive => _isAlive;
   void die() => _isAlive = false;
@@ -25,6 +24,7 @@ class Cell {
 
 // rects are simply rectangle Coordinates used to draw them using Custom Painter.
 // here using the col & row iteration will give the rect.
+  @Deprecated("Use the one in utils class.")
   static Rect getRect(int x, int y) => Rect.fromPoints(
         Offset(x.toDouble(), y.toDouble()) * SQUARE_LENGTH,
         Offset(x.toDouble() + 1, y.toDouble() + 1) * SQUARE_LENGTH,
