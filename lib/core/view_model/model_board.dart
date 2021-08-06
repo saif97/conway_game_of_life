@@ -34,7 +34,7 @@ class ModelBoard extends ChangeNotifier {
   Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = true}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: randomly);
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent+1, randomize: randomly);
     // testHL();
     _numOfColumns = pow(2, _universeSizeExponent).toInt();
     _numOfRows = _numOfColumns;
@@ -44,7 +44,13 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void testHL() {
-    final node = _hashlifeUniverse.addBorder(_hashlifeUniverse.addBorder(Node.CANONICAL_NODES[15]));
+    final node = _hashlifeUniverse.addBorder(Node.fromQuads(
+      Node.CANONICAL_NODES[0],
+      Node.CANONICAL_NODES[0],
+      Node.CANONICAL_NODES[3],
+      // Node.CANONICAL_NODES[2],
+      Node.CANONICAL_NODES[0],
+    ));
     _hashlifeUniverse.setRootNode(node);
   }
 
@@ -66,8 +72,9 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void play() {
+
     _timer?.cancel();
-    final updateRate = 500 + (speedMultiplier * 10);
+    final updateRate = 50 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
       // updateCells();
       queueHashlifeCells = _hashlifeUniverse.stepOneGeneration();

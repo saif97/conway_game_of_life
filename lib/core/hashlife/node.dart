@@ -57,7 +57,7 @@ class Node {
     if (depth == 0) return (isAlive ? 1 : 0).toString();
     // base case to print a 2x2 grid
     if (depth == 1) {
-      return "${nw!.isAlive ? 1 : 0}\t${ne!.isAlive ? 1 : 0}\n\n${sw!.isAlive ? 1 : 0}\t${se!.isAlive ? 1 : 0}\n\n";
+      return "pop: ${population} |${nw!.isAlive ? 1 : 0}\t${ne!.isAlive ? 1 : 0}\n\n${sw!.isAlive ? 1 : 0}\t${se!.isAlive ? 1 : 0}\n\n";
     } else {
       return "Cells: ${pow(2, depth)}x${pow(2, depth)} | population: $population ";
       // return "$nw\t$ne\n\n$sw\t$se\t";

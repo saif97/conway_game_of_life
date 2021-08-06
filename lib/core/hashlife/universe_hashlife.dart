@@ -14,9 +14,9 @@ class HashlifeUniverse {
 
   // Given a node, we'll lay it out here centered w/ a empty border and apply GoL rules.
   // Made it as a global var not to Overwhelm the Garbage Collector.
-  final _auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
+  // final _auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
   // on the first Iteration, the result list should be same as working matrix. otherwise GoL will miss when number of Neighbors =2
-  late List<List<BinaryNode>> _auxMatrixResult;
+  // late List<List<BinaryNode>> _auxMatrixResult;
 
   int _generation = 0;
   final int _worldDepth;
@@ -27,7 +27,8 @@ class HashlifeUniverse {
   HashlifeUniverse(this._worldDepth, {bool randomize = false}) : assert(_worldDepth >= 2) {
     // rootNode = addBorder(addBorder(Node.CANONICAL_NODES[15]));
     _rootNode = getCanonicalOf(_worldDepth, randomize: randomize);
-    _auxMatrixResult = _auxMatrix;
+    // _auxMatrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => _auxMatrix[eachRow][eachCol]));
+    // _auxMatrixResult = _auxMatrix;
   }
   void setRootNode(Node node) {
     assert(node.depth == _worldDepth, "root node (${node.depth}) & worldDepth ($_worldDepth) has to be the same.");
@@ -105,21 +106,22 @@ class HashlifeUniverse {
     return createOrgetFromHash(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
   }
 
-  void applyGoLRulesToAux() {
+  List<List<BinaryNode>> applyGoLRulesToAux(List<List<BinaryNode>> auxMatrix) {
+    final matrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => auxMatrix[eachRow][eachCol]));
     for (var eachRow = 1; eachRow < 5; eachRow++) {
       for (var eachCol = 1; eachCol < 5; eachCol++) {
         // those are the 8 nodes Surrounding (eachRow,eachCol)
-        final n1 = _auxMatrix[eachRow - 1][eachCol - 1];
-        final n2 = _auxMatrix[eachRow][eachCol - 1];
-        final n3 = _auxMatrix[eachRow + 1][eachCol - 1];
-        final n4 = _auxMatrix[eachRow + 1][eachCol];
+        final n1 = auxMatrix[eachRow - 1][eachCol - 1];
+        final n2 = auxMatrix[eachRow][eachCol - 1];
+        final n3 = auxMatrix[eachRow + 1][eachCol - 1];
+        final n4 = auxMatrix[eachRow + 1][eachCol];
 
-        final n5 = _auxMatrix[eachRow + 1][eachCol + 1];
-        final n6 = _auxMatrix[eachRow][eachCol + 1];
-        final n7 = _auxMatrix[eachRow - 1][eachCol + 1];
-        final n8 = _auxMatrix[eachRow - 1][eachCol];
+        final n5 = auxMatrix[eachRow + 1][eachCol + 1];
+        final n6 = auxMatrix[eachRow][eachCol + 1];
+        final n7 = auxMatrix[eachRow - 1][eachCol + 1];
+        final n8 = auxMatrix[eachRow - 1][eachCol];
 
-        Node isAliveState = _auxMatrix[eachRow][eachCol];
+        Node isAliveState = auxMatrix[eachRow][eachCol];
 
         // add the number of alive Neighbors
         final numAliveNeighbors = n1.isAliveAsInt() +
@@ -133,66 +135,75 @@ class HashlifeUniverse {
 
         // if under populated or over populated kill the cell.
         if (numAliveNeighbors < 2 || numAliveNeighbors > 3) {
-          _auxMatrixResult[eachRow][eachCol] = BinaryNode.OFF;
+          matrixResult[eachRow][eachCol] = BinaryNode.OFF;
         } else {
+          // if (numAliveNeighbors == 2) {
+          // if (auxMatrix[eachRow][eachCol] == BinaryNode.ON) {
+          // matrixResult[eachRow][eachCol] = BinaryNode.ON;
+          // }
+          // }
           // "Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction."
           if (numAliveNeighbors == 3) {
-            _auxMatrixResult[eachRow][eachCol] = BinaryNode.ON;
+            matrixResult[eachRow][eachCol] = BinaryNode.ON;
           }
         }
       }
     }
+    return matrixResult;
   }
 
   // since the list is of size 6X6 we'll have border of size 1 of type BinaryNode.OFF around the node
-  void addNodeToAux(Node node) {
+  List<List<BinaryNode>> getAuxFromNode(Node node) {
     assert(node.depth == 2, "Only works on node of depth 2^2 (4x4 grid) ");
+    final auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
 
-    _auxMatrix[1][1] = (node.nw!.nw)! as BinaryNode;
-    _auxMatrix[1][2] = (node.nw!.ne)! as BinaryNode;
-    _auxMatrix[1][3] = (node.ne!.nw)! as BinaryNode;
-    _auxMatrix[1][4] = (node.ne!.ne)! as BinaryNode;
+    auxMatrix[1][1] = (node.nw!.nw)! as BinaryNode;
+    auxMatrix[1][2] = (node.nw!.ne)! as BinaryNode;
+    auxMatrix[1][3] = (node.ne!.nw)! as BinaryNode;
+    auxMatrix[1][4] = (node.ne!.ne)! as BinaryNode;
 
-    _auxMatrix[2][1] = (node.nw!.sw)! as BinaryNode;
-    _auxMatrix[2][2] = (node.nw!.se)! as BinaryNode;
-    _auxMatrix[2][3] = (node.ne!.sw)! as BinaryNode;
-    _auxMatrix[2][4] = (node.ne!.se)! as BinaryNode;
+    auxMatrix[2][1] = (node.nw!.sw)! as BinaryNode;
+    auxMatrix[2][2] = (node.nw!.se)! as BinaryNode;
+    auxMatrix[2][3] = (node.ne!.sw)! as BinaryNode;
+    auxMatrix[2][4] = (node.ne!.se)! as BinaryNode;
 
-    _auxMatrix[3][1] = (node.sw!.nw)! as BinaryNode;
-    _auxMatrix[3][2] = (node.sw!.ne)! as BinaryNode;
-    _auxMatrix[3][3] = (node.se!.nw)! as BinaryNode;
-    _auxMatrix[3][4] = (node.se!.ne)! as BinaryNode;
+    auxMatrix[3][1] = (node.sw!.nw)! as BinaryNode;
+    auxMatrix[3][2] = (node.sw!.ne)! as BinaryNode;
+    auxMatrix[3][3] = (node.se!.nw)! as BinaryNode;
+    auxMatrix[3][4] = (node.se!.ne)! as BinaryNode;
 
-    _auxMatrix[4][1] = (node.sw!.sw)! as BinaryNode;
-    _auxMatrix[4][2] = (node.sw!.se)! as BinaryNode;
-    _auxMatrix[4][3] = (node.se!.sw)! as BinaryNode;
-    _auxMatrix[4][4] = (node.se!.se)! as BinaryNode;
+    auxMatrix[4][1] = (node.sw!.sw)! as BinaryNode;
+    auxMatrix[4][2] = (node.sw!.se)! as BinaryNode;
+    auxMatrix[4][3] = (node.se!.sw)! as BinaryNode;
+    auxMatrix[4][4] = (node.se!.se)! as BinaryNode;
+
+    return auxMatrix;
   }
 
-  Node auxResultToNode() {
+  Node getNodeFromAux(List<List<BinaryNode>> matrix) {
     final nw = createOrgetFromHash(
-      _auxMatrixResult[1][1],
-      _auxMatrixResult[1][2],
-      _auxMatrixResult[2][1],
-      _auxMatrixResult[2][2],
+      matrix[1][1],
+      matrix[1][2],
+      matrix[2][1],
+      matrix[2][2],
     );
     final ne = createOrgetFromHash(
-      _auxMatrixResult[1][3],
-      _auxMatrixResult[1][4],
-      _auxMatrixResult[2][3],
-      _auxMatrixResult[2][4],
+      matrix[1][3],
+      matrix[1][4],
+      matrix[2][3],
+      matrix[2][4],
     );
     final sw = createOrgetFromHash(
-      _auxMatrixResult[3][1],
-      _auxMatrixResult[3][2],
-      _auxMatrixResult[4][1],
-      _auxMatrixResult[4][2],
+      matrix[3][1],
+      matrix[3][2],
+      matrix[4][1],
+      matrix[4][2],
     );
     final se = createOrgetFromHash(
-      _auxMatrixResult[3][3],
-      _auxMatrixResult[3][4],
-      _auxMatrixResult[4][3],
-      _auxMatrixResult[4][4],
+      matrix[3][3],
+      matrix[3][4],
+      matrix[4][3],
+      matrix[4][4],
     );
 
     return createOrgetFromHash(nw, ne, sw, se);
@@ -213,10 +224,10 @@ class HashlifeUniverse {
     Node result;
     // when 4X4
     if (node.depth == 2) {
-      addNodeToAux(node);
-      applyGoLRulesToAux();
+      final aux = getAuxFromNode(node);
+      final resultAx = applyGoLRulesToAux(aux);
 
-      result = getCenterNode(auxResultToNode());
+      result = getCenterNode(getNodeFromAux(resultAx));
     } else {
       final node11 = createOrgetFromHash(node.nw!.nw!, node.nw!.ne!, node.nw!.sw!, node.nw!.se!);
       final node21 = createOrgetFromHash(node.nw!.sw!, node.nw!.se!, node.sw!.nw!, node.sw!.ne!);
@@ -318,6 +329,4 @@ class HashlifeUniverse {
   }
 
   Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);
-  List get auxMatrix => List.from(_auxMatrix);
-  List get auxMatrixResult => List.from(_auxMatrixResult);
 }

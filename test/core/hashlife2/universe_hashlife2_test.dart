@@ -98,27 +98,51 @@ void main() {
     expect(actual, match);
   });
 
-  test("Test Node to Auxiliary", () {
-    HashlifeUniverse universe = HashlifeUniverse(2);
-    final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
-    universe.addNodeToAux(node4x4);
+  group("test Node to Aux", () {
+    test("Test Node to Auxiliary", () {
+      HashlifeUniverse universe = HashlifeUniverse(2);
+      final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
+      final aux = universe.getAuxFromNode(node4x4);
 
-    expect([
-      BinaryNode.OFF,
-      BinaryNode.OFF,
-      BinaryNode.ON,
-      BinaryNode.ON,
-      BinaryNode.OFF,
-      BinaryNode.OFF,
-    ], universe.auxMatrix[2]);
+      expect(
+        [
+          BinaryNode.OFF,
+          BinaryNode.OFF,
+          BinaryNode.ON,
+          BinaryNode.ON,
+          BinaryNode.OFF,
+          BinaryNode.OFF,
+        ],
+        aux[2],
+      );
+    });
+
+    test("Test Node to Auxiliary I shape", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final node = Node.fromQuads(
+        Node.CANONICAL_NODES[3],
+        Node.CANONICAL_NODES[2],
+        Node.CANONICAL_NODES[0],
+        Node.CANONICAL_NODES[0],
+      );
+
+      final aux = universe.getAuxFromNode(node);
+
+      expect([BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF], aux[0]);
+      expect([BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF], aux[1]);
+      expect([BinaryNode.OFF, BinaryNode.ON, BinaryNode.ON, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF], aux[2]);
+      expect([BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF], aux[3]);
+      expect([BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF], aux[4]);
+      expect([BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF, BinaryNode.OFF], aux[5]);
+    });
   });
 
   test("Test auxResultToNode", () {
     final HashlifeUniverse universe = HashlifeUniverse(2);
     final node4x4 = universe.addBorder(Node.CANONICAL_NODES[3]);
-    universe.addNodeToAux(node4x4);
-    universe.applyGoLRulesToAux();
-    final actual = universe.auxResultToNode();
+    final aux = universe.getAuxFromNode(node4x4);
+    final auxResult = universe.applyGoLRulesToAux(aux);
+    final actual = universe.getNodeFromAux(auxResult);
     final node = Node.fromQuads(Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0]);
     expect(actual, node);
   });
@@ -128,20 +152,20 @@ void main() {
     test("test full 4X4 node", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
       final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
-      universe.addNodeToAux(node4x4);
-      universe.applyGoLRulesToAux();
+      final aux = universe.getAuxFromNode(node4x4);
+      final auxResult = universe.applyGoLRulesToAux(aux);
 
-      final actual = universe.getCenterNode(universe.auxResultToNode());
+      final actual = universe.getCenterNode(universe.getNodeFromAux(auxResult));
       expect(actual, Node.CANONICAL_NODES[15]);
     });
 
     test("Test < shape", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
       final node4x4 = universe.addBorder(Node.CANONICAL_NODES[14]);
-      universe.addNodeToAux(node4x4);
-      universe.applyGoLRulesToAux();
+      final aux = universe.getAuxFromNode(node4x4);
+      final auxResult = universe.applyGoLRulesToAux(aux);
 
-      final actual = universe.getCenterNode(universe.auxResultToNode());
+      final actual = universe.getCenterNode(universe.getNodeFromAux(auxResult));
       expect(actual, Node.CANONICAL_NODES[15]);
     });
   });
@@ -209,6 +233,27 @@ void main() {
       final q = universe.plotNode(node, OffsetInt.fromInt(0, 0), Queue());
 
       expect(q, Queue.from(const [Offset(1.0, 0.0), Offset(3.0, 0.0), Offset(1.0, 2.0), Offset(3.0, 2.0)]));
+    });
+
+    test("Test I shape  on a universe of depth 3", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final node = Node.fromQuads(
+        Node.CANONICAL_NODES[3],
+        Node.CANONICAL_NODES[2],
+        Node.CANONICAL_NODES[0],
+        Node.CANONICAL_NODES[0],
+      );
+
+      final aux = universe.getAuxFromNode(node);
+      final auxResult = universe.applyGoLRulesToAux(aux);
+
+      final actual = universe.getNodeFromAux(auxResult);
+      print(universe.plotNode(actual, OffsetInt.fromInt(0, 0), Queue()));
+
+      // final result = universe.calCenter(node);
+      // final out = universe.plotNode(result, OffsetInt.fromInt(0, 0), Queue());
+      // print(out);
+      // expect(out, Node.CANONICAL_NODES[15]);
     });
   });
 }
