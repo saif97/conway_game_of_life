@@ -125,17 +125,29 @@ void main() {
 
   // rules are standard no need to test them thoroughly.
   group("Test GoL rules.", () {
-    test("Test Under Population rule", () {
+    test("test full 4X4 node", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
-      final node4x4 = universe.addBorder(Node.CANONICAL_NODES[3]);
+      final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
       universe.addNodeToAux(node4x4);
       universe.applyGoLRulesToAux();
-      // expect(universe.auxMatrixResult, Node.fromQuads(Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0]));
+
+      final actual = universe.getCenterNode(universe.auxResultToNode());
+      expect(actual, Node.CANONICAL_NODES[15]);
+    });
+
+    test("Test < shape", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final node4x4 = universe.addBorder(Node.CANONICAL_NODES[14]);
+      universe.addNodeToAux(node4x4);
+      universe.applyGoLRulesToAux();
+
+      final actual = universe.getCenterNode(universe.auxResultToNode());
+      expect(actual, Node.CANONICAL_NODES[15]);
     });
   });
 
   group("Test calResult function", () {
-    test("Test on 4X4", () {
+    test("Test 4 quads goes to empty.", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[2],
@@ -144,18 +156,32 @@ void main() {
         Node.CANONICAL_NODES[2],
       );
       final out = universe.calCenter(node);
-      print(out);
 
-      // expect(universe.auxMatrixResult, Node.fromQuads(Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0]));
+      expect(out, Node.CANONICAL_NODES[0]);
     });
 
     test("Test on 4X4 full block", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final node = universe.addBorder(Node.CANONICAL_NODES[15]);
+      final out = universe.calCenter(node);
+
+      expect(out, Node.CANONICAL_NODES[15]);
+    });
+    test("Test < shape", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final node = universe.addBorder(Node.CANONICAL_NODES[14]);
+      final out = universe.calCenter(node);
+
+      expect(out, Node.CANONICAL_NODES[15]);
+    });
+
+    test("Test 4X4 full block on a universe of depth 3", () {
       final HashlifeUniverse universe = HashlifeUniverse(3);
       final node = universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[15]));
-      final out = universe.calCenter(node);
-      print(out);
 
-      // expect(universe.auxMatrixResult, Node.fromQuads(Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0], Node.CANONICAL_NODES[0]));
+      final result = universe.calCenter(node);
+      final out = universe.getCenterNode(result);
+      expect(out, Node.CANONICAL_NODES[15]);
     });
   });
 

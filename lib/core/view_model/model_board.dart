@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
+import 'package:conway_game_of_life/core/hashlife/node.dart';
 import 'package:conway_game_of_life/core/hashlife/universe_hashlife.dart';
 import 'package:conway_game_of_life/core/models/block.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
@@ -15,7 +16,7 @@ class ModelBoard extends ChangeNotifier {
   late final Universe universe;
   late int _numOfColumns;
   late int _numOfRows;
-  int _universeSizeExponent = 3;
+  int _universeSizeExponent = 6;
   Timer? _timer;
   int _speedMultiplier = 0;
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
@@ -32,13 +33,19 @@ class ModelBoard extends ChangeNotifier {
   bool _isModeInsertBlock = false;
   Offset _mousePosInBoard = Offset.zero;
 
-  ModelBoard({bool randomly = false}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: true);
+  ModelBoard({bool randomly = true}) {
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: randomly);
+    // testHL();
     _numOfColumns = pow(2, _universeSizeExponent).toInt();
     _numOfRows = _numOfColumns;
 
     // initBoard(randomly: randomly);
     // universe = Universe(rows: _numOfRows, cols: _numOfColumns)..randomizeUniverse();
+  }
+
+  void testHL() {
+    final node = _hashlifeUniverse.addBorder(_hashlifeUniverse.addBorder(Node.CANONICAL_NODES[15]));
+    _hashlifeUniverse.setRootNode(node);
   }
 
   void initBoard({bool randomly = false}) {

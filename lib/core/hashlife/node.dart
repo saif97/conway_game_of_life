@@ -59,7 +59,7 @@ class Node {
     if (depth == 1) {
       return "${nw!.isAlive ? 1 : 0}\t${ne!.isAlive ? 1 : 0}\n\n${sw!.isAlive ? 1 : 0}\t${se!.isAlive ? 1 : 0}\n\n";
     } else {
-      return "Cells: ${2 ^ depth}x${2 ^ depth} | population: $population ";
+      return "Cells: ${pow(2, depth)}x${pow(2, depth)} | population: $population ";
       // return "$nw\t$ne\n\n$sw\t$se\t";
     }
   }

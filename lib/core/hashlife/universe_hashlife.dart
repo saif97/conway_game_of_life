@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'node.dart';
 
 class HashlifeUniverse {
-  late Node rootNode;
+  late Node _rootNode;
   final Map<Node, Node> _memoizedResults = {};
 
   final Map<Node, Node> _memoizedNodes = {};
@@ -15,7 +15,8 @@ class HashlifeUniverse {
   // Given a node, we'll lay it out here centered w/ a empty border and apply GoL rules.
   // Made it as a global var not to Overwhelm the Garbage Collector.
   final _auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
-  final _auxMatrixResult = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
+  // on the first Iteration, the result list should be same as working matrix. otherwise GoL will miss when number of Neighbors =2
+  late List<List<BinaryNode>> _auxMatrixResult;
 
   int _generation = 0;
   final int _worldDepth;
@@ -25,13 +26,18 @@ class HashlifeUniverse {
 
   HashlifeUniverse(this._worldDepth, {bool randomize = false}) : assert(_worldDepth >= 2) {
     // rootNode = addBorder(addBorder(Node.CANONICAL_NODES[15]));
-    rootNode = getCanonicalOf(_worldDepth, randomize: randomize);
+    _rootNode = getCanonicalOf(_worldDepth, randomize: randomize);
+    _auxMatrixResult = _auxMatrix;
+  }
+  void setRootNode(Node node) {
+    assert(node.depth == _worldDepth, "root node (${node.depth}) & worldDepth ($_worldDepth) has to be the same.");
+    _rootNode = node;
   }
 
   Queue<Offset> stepOneGeneration() {
-    rootNode = addBorder(calCenter(rootNode));
+    _rootNode = addBorder(calCenter(_rootNode));
 
-    return plotNode(rootNode, Offset.zero, Queue());
+    return plotNode(_rootNode, Offset.zero, Queue());
   }
 
   // Given the list of Canonical nodes is of size 16 (1 1 1 1), I can get constant time access if I use bit Manipulation.
@@ -142,54 +148,54 @@ class HashlifeUniverse {
   void addNodeToAux(Node node) {
     assert(node.depth == 2, "Only works on node of depth 2^2 (4x4 grid) ");
 
-    _auxMatrix[1][1] = (node.sw!.sw)! as BinaryNode;
-    _auxMatrix[1][2] = (node.sw!.se)! as BinaryNode;
-    _auxMatrix[1][3] = (node.se!.sw)! as BinaryNode;
-    _auxMatrix[1][4] = (node.se!.se)! as BinaryNode;
+    _auxMatrix[1][1] = (node.nw!.nw)! as BinaryNode;
+    _auxMatrix[1][2] = (node.nw!.ne)! as BinaryNode;
+    _auxMatrix[1][3] = (node.ne!.nw)! as BinaryNode;
+    _auxMatrix[1][4] = (node.ne!.ne)! as BinaryNode;
 
-    _auxMatrix[2][1] = (node.sw!.nw)! as BinaryNode;
-    _auxMatrix[2][2] = (node.sw!.ne)! as BinaryNode;
-    _auxMatrix[2][3] = (node.se!.nw)! as BinaryNode;
-    _auxMatrix[2][4] = (node.se!.ne)! as BinaryNode;
+    _auxMatrix[2][1] = (node.nw!.sw)! as BinaryNode;
+    _auxMatrix[2][2] = (node.nw!.se)! as BinaryNode;
+    _auxMatrix[2][3] = (node.ne!.sw)! as BinaryNode;
+    _auxMatrix[2][4] = (node.ne!.se)! as BinaryNode;
 
-    _auxMatrix[3][1] = (node.nw!.sw)! as BinaryNode;
-    _auxMatrix[3][2] = (node.nw!.se)! as BinaryNode;
-    _auxMatrix[3][3] = (node.ne!.sw)! as BinaryNode;
-    _auxMatrix[3][4] = (node.ne!.se)! as BinaryNode;
+    _auxMatrix[3][1] = (node.sw!.nw)! as BinaryNode;
+    _auxMatrix[3][2] = (node.sw!.ne)! as BinaryNode;
+    _auxMatrix[3][3] = (node.se!.nw)! as BinaryNode;
+    _auxMatrix[3][4] = (node.se!.ne)! as BinaryNode;
 
-    _auxMatrix[4][1] = (node.nw!.nw)! as BinaryNode;
-    _auxMatrix[4][2] = (node.nw!.ne)! as BinaryNode;
-    _auxMatrix[4][3] = (node.ne!.nw)! as BinaryNode;
-    _auxMatrix[4][4] = (node.ne!.ne)! as BinaryNode;
+    _auxMatrix[4][1] = (node.sw!.sw)! as BinaryNode;
+    _auxMatrix[4][2] = (node.sw!.se)! as BinaryNode;
+    _auxMatrix[4][3] = (node.se!.sw)! as BinaryNode;
+    _auxMatrix[4][4] = (node.se!.se)! as BinaryNode;
   }
 
   Node auxResultToNode() {
-    final sw = createOrgetFromHash(
+    final nw = createOrgetFromHash(
       _auxMatrixResult[1][1],
       _auxMatrixResult[1][2],
       _auxMatrixResult[2][1],
       _auxMatrixResult[2][2],
     );
-    final se = createOrgetFromHash(
+    final ne = createOrgetFromHash(
       _auxMatrixResult[1][3],
       _auxMatrixResult[1][4],
       _auxMatrixResult[2][3],
       _auxMatrixResult[2][4],
     );
-    final nw = createOrgetFromHash(
+    final sw = createOrgetFromHash(
       _auxMatrixResult[3][1],
       _auxMatrixResult[3][2],
       _auxMatrixResult[4][1],
       _auxMatrixResult[4][2],
     );
-    final ne = createOrgetFromHash(
+    final se = createOrgetFromHash(
       _auxMatrixResult[3][3],
       _auxMatrixResult[3][4],
       _auxMatrixResult[4][3],
       _auxMatrixResult[4][4],
     );
 
-    return createOrgetFromHash(sw, se, nw, ne);
+    return createOrgetFromHash(nw, ne, sw, se);
   }
 
   // given a node, process the center result.
@@ -212,18 +218,17 @@ class HashlifeUniverse {
 
       result = getCenterNode(auxResultToNode());
     } else {
-      //!!! todo: parameter order is not accurate.
-      final node11 = createOrgetFromHash(node.sw!.sw!, node.sw!.se!, node.sw!.nw!, node.sw!.ne!);
-      final node21 = createOrgetFromHash(node.sw!.nw!, node.sw!.ne!, node.nw!.sw!, node.nw!.se!);
-      final node31 = createOrgetFromHash(node.nw!.sw!, node.nw!.se!, node.nw!.nw!, node.nw!.ne!);
+      final node11 = createOrgetFromHash(node.nw!.nw!, node.nw!.ne!, node.nw!.sw!, node.nw!.se!);
+      final node21 = createOrgetFromHash(node.nw!.sw!, node.nw!.se!, node.sw!.nw!, node.sw!.ne!);
+      final node31 = createOrgetFromHash(node.sw!.nw!, node.sw!.ne!, node.sw!.sw!, node.sw!.se!);
 
-      final node12 = createOrgetFromHash(node.sw!.se!, node.se!.sw!, node.sw!.ne!, node.se!.nw!);
-      final node22 = createOrgetFromHash(node.sw!.ne!, node.se!.nw!, node.nw!.se!, node.ne!.sw!);
-      final node32 = createOrgetFromHash(node.nw!.se!, node.ne!.sw!, node.nw!.ne!, node.ne!.nw!);
+      final node12 = createOrgetFromHash(node.nw!.ne!, node.ne!.nw!, node.nw!.se!, node.ne!.sw!);
+      final node22 = createOrgetFromHash(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
+      final node32 = createOrgetFromHash(node.sw!.ne!, node.se!.nw!, node.sw!.se!, node.se!.sw!);
 
-      final node13 = createOrgetFromHash(node.se!.sw!, node.se!.se!, node.se!.nw!, node.se!.ne!);
-      final node23 = createOrgetFromHash(node.se!.nw!, node.se!.ne!, node.ne!.sw!, node.ne!.se!);
-      final node33 = createOrgetFromHash(node.ne!.sw!, node.ne!.se!, node.ne!.nw!, node.ne!.ne!);
+      final node13 = createOrgetFromHash(node.ne!.nw!, node.ne!.ne!, node.ne!.sw!, node.ne!.se!);
+      final node23 = createOrgetFromHash(node.ne!.sw!, node.ne!.se!, node.se!.nw!, node.se!.ne!);
+      final node33 = createOrgetFromHash(node.se!.nw!, node.se!.ne!, node.se!.sw!, node.se!.se!);
 
       // step the auxiliary nodes!
 
@@ -240,18 +245,18 @@ class HashlifeUniverse {
       final Node nw, ne, sw, se;
 
       if (_isFastForward) {
-        sw = calCenter(createOrgetFromHash(res11, res12, res21, res22));
-        se = calCenter(createOrgetFromHash(res12, res13, res22, res23));
-        nw = calCenter(createOrgetFromHash(res21, res22, res31, res32));
-        ne = calCenter(createOrgetFromHash(res22, res23, res32, res33));
+        nw = calCenter(createOrgetFromHash(res11, res12, res21, res22));
+        ne = calCenter(createOrgetFromHash(res12, res13, res22, res23));
+        sw = calCenter(createOrgetFromHash(res21, res22, res31, res32));
+        se = calCenter(createOrgetFromHash(res22, res23, res32, res33));
       } else {
-        sw = getCenterNode(createOrgetFromHash(res11, res12, res21, res22));
-        se = getCenterNode(createOrgetFromHash(res12, res13, res22, res23));
-        nw = getCenterNode(createOrgetFromHash(res21, res22, res31, res32));
-        ne = getCenterNode(createOrgetFromHash(res22, res23, res32, res33));
+        nw = getCenterNode(createOrgetFromHash(res11, res12, res21, res22));
+        ne = getCenterNode(createOrgetFromHash(res12, res13, res22, res23));
+        sw = getCenterNode(createOrgetFromHash(res21, res22, res31, res32));
+        se = getCenterNode(createOrgetFromHash(res22, res23, res32, res33));
       }
 
-      result = createOrgetFromHash(sw, se, nw, ne);
+      result = createOrgetFromHash(nw, ne, sw, se);
     }
 
     _memoizedResults[node] = result;
@@ -259,25 +264,25 @@ class HashlifeUniverse {
     return result;
   }
 
-  // given a node, assemble a hash of all of its sub nodes recursively.
-  Map<Node, Node> getNodeList(Node node, Map<Node, Node> nodeList) {
-    if (node.area > 0) {
-      if (node.depth == 1) {
-        nodeList[node] = node;
-      } else {
-        if (node.sw!.area > 0) nodeList[node.sw!] = node.sw!;
-        if (node.se!.area > 0) nodeList[node.se!] = node.se!;
-        if (node.nw!.area > 0) nodeList[node.nw!] = node.nw!;
-        if (node.ne!.area > 0) nodeList[node.ne!] = node.ne!;
+  // // given a node, assemble a hash of all of its sub nodes recursively.
+  // Map<Node, Node> getNodeList(Node node, Map<Node, Node> nodeList) {
+  // if (node.area > 0) {
+  // if (node.depth == 1) {
+  // nodeList[node] = node;
+  // } else {
+  // if (node.sw!.area > 0) nodeList[node.sw!] = node.sw!;
+  // if (node.se!.area > 0) nodeList[node.se!] = node.se!;
+  // if (node.nw!.area > 0) nodeList[node.nw!] = node.nw!;
+  // if (node.ne!.area > 0) nodeList[node.ne!] = node.ne!;
 
-        getNodeList(node.sw!, nodeList);
-        getNodeList(node.se!, nodeList);
-        getNodeList(node.nw!, nodeList);
-        getNodeList(node.ne!, nodeList);
-      }
-    }
-    return nodeList;
-  }
+  // getNodeList(node.sw!, nodeList);
+  // getNodeList(node.se!, nodeList);
+  // getNodeList(node.nw!, nodeList);
+  // getNodeList(node.ne!, nodeList);
+  // }
+  // }
+  // return nodeList;
+  // }
 
   // pos is the Absolute position in the grid this will be used by painter to draw rects.
   // todo: abort if no population in a given node.
