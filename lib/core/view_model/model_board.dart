@@ -34,7 +34,7 @@ class ModelBoard extends ChangeNotifier {
   Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = true}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent+1, randomize: randomly);
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent + 1, randomize: randomly);
     // testHL();
     _numOfColumns = pow(2, _universeSizeExponent).toInt();
     _numOfRows = _numOfColumns;
@@ -72,7 +72,6 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void play() {
-
     _timer?.cancel();
     final updateRate = 50 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {

@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
@@ -241,6 +242,9 @@ class _WCellsPrinter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context, listen: false);
+    // todo: clean it up!!!!
+    final offsetBy = Offset(pow(2, model.getUniverseSizeExponent - 1).toDouble(), pow(2, model.getUniverseSizeExponent - 1).toDouble());
+
     return RepaintBoundary(
       child: Selector<ModelBoard, Queue<Offset>>(
         selector: (_, model) => model.queueHashlifeCells,
@@ -249,7 +253,7 @@ class _WCellsPrinter extends StatelessWidget {
         builder: (context, value, child) {
           return CustomPaint(
             size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
-            painter: CellsPainter(value),
+            painter: CellsPainter(value, offsetBy),
             isComplex: true,
             willChange: true,
           );
@@ -261,13 +265,16 @@ class _WCellsPrinter extends StatelessWidget {
 
 class CellsPainter extends CustomPainter {
   final Queue<Offset> queueAliveCells;
+  final Offset offsetby;
 
-  const CellsPainter(this.queueAliveCells);
+  const CellsPainter(this.queueAliveCells, this.offsetby);
 
   @override
   void paint(Canvas canvas, Size size) {
+    Offset offsetCell;
     for (final cell in queueAliveCells) {
-      canvas.drawRect(getRect(cell.dxInt, cell.dyInt), Paint()..color = Colors.blueAccent);
+      offsetCell = cell - offsetby;
+      canvas.drawRect(getRect(offsetCell.dxInt, offsetCell.dyInt), Paint()..color = Colors.blueAccent);
     }
   }
 
