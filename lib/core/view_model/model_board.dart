@@ -7,13 +7,10 @@ import 'package:conway_game_of_life/core/hashlife/node.dart';
 import 'package:conway_game_of_life/core/hashlife/universe_hashlife.dart';
 import 'package:conway_game_of_life/core/models/block.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
-import 'package:conway_game_of_life/core/optimized_GoL/universe.dart';
 import 'package:conway_game_of_life/core/saved_blocks.dart';
 import 'package:flutter/material.dart';
 
-// todo: the class should be immutable.
 class ModelBoard extends ChangeNotifier {
-  late final Universe universe;
   late int _numOfColumns;
   late int _numOfRows;
   int _universeSizeExponent = 6;
@@ -54,30 +51,11 @@ class ModelBoard extends ChangeNotifier {
     _hashlifeUniverse.setRootNode(node);
   }
 
-  void initBoard({bool randomly = false}) {
-    final randomNumberGenerator = Random();
-    _initialMatrixUniverse = List.generate(
-      _numOfColumns,
-      (eachCol) => List.generate(
-        _numOfRows,
-        (eachRow) {
-          final bool isAlive = randomly && randomNumberGenerator.nextBool();
-          final newCell = Cell(isAlive, upperLeftX: eachCol, upperLeftY: eachRow);
-          // if (isAlive) queueAliveCells.add(newCell);
-          return newCell;
-        },
-      ),
-    );
-    _currentMatrixUniverse = _initialMatrixUniverse;
-  }
-
   void play() {
     _timer?.cancel();
     final updateRate = 50 + (speedMultiplier * 10);
     _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
-      // updateCells();
       queueHashlifeCells = _hashlifeUniverse.stepOneGeneration();
-
       notifyListeners();
     });
   }
@@ -93,52 +71,6 @@ class ModelBoard extends ChangeNotifier {
 
   void pause() {
     _timer?.cancel();
-  }
-
-// todo: use pop push instead of creating a new queue instance.
-// todo: clean this up
-  void updateCells() {
-    final List<List<Cell>> updatedCells = List<List<Cell>>.of(
-        _currentMatrixUniverse.map((e) => e.map<Cell>((e) => Cell(e.isAlive, upperLeftX: e.upperLeftX, upperLeftY: e.upperLeftY)).toList()));
-
-    queueAliveCells.clear();
-
-    for (int col = 0; col < _numOfColumns; col++) {
-      for (int row = 0; row < _numOfRows; row++) {
-        final int aliveNeighbors = _getAliveNeighbors(col, row);
-        final bool isCurrentCellAlive = _currentMatrixUniverse[col][row].isAlive;
-        final updatedCell = updatedCells[col][row];
-        if (!isCurrentCellAlive && aliveNeighbors == 3) {
-          updatedCell.revive();
-        } else if (isCurrentCellAlive && aliveNeighbors != 2 && aliveNeighbors != 3) {
-          updatedCell.die();
-        }
-
-        if (updatedCell.isAlive == true) queueAliveCells.add(updatedCell);
-      }
-    }
-
-    _currentMatrixUniverse = updatedCells;
-  }
-
-// todo: refactor this
-  int _getAliveNeighbors(int col, int row) {
-    int aliveNeighbours = 0;
-    for (int rowSummand = -1; rowSummand <= 1; rowSummand++) {
-      for (int colSummand = -1; colSummand <= 1; colSummand++) {
-        final neighbourCellRow = row + rowSummand;
-        final neighbourCellColumn = col + colSummand;
-        final bool isOutOfRange =
-            neighbourCellRow < 0 || neighbourCellRow > (_numOfRows - 1) || neighbourCellColumn < 0 || neighbourCellColumn > (_numOfColumns - 1);
-        final bool isNeighbourCell = rowSummand != 0 || colSummand != 0;
-
-        if (!isOutOfRange && isNeighbourCell && _currentMatrixUniverse[neighbourCellColumn][neighbourCellRow].isAlive) {
-          aliveNeighbours++;
-        }
-      }
-    }
-
-    return aliveNeighbours;
   }
 
   void confirmBlockInsertion() {
@@ -203,8 +135,6 @@ class ModelBoard extends ChangeNotifier {
     if (cols != _numOfColumns || rows != _numOfRows) {
       _numOfColumns = cols;
       _numOfRows = rows;
-
-      initBoard(randomly: true);
 
       notifyListeners();
     }
