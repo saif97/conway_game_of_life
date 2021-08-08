@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:flutter/material.dart';
 
+import '../utils.dart';
 import 'node.dart';
 
 class HashlifeUniverse {
@@ -24,7 +25,20 @@ class HashlifeUniverse {
 
   final rand = Random();
 
+  late final List<List<Rect>> _rects;
+
   HashlifeUniverse(this._worldDepth, {bool randomize = false}) : assert(_worldDepth >= 2) {
+    final worldSize = pow(2, _worldDepth).toInt();
+    final offsetBy = Offset(pow(2, _worldDepth - 2).toDouble(), pow(2, _worldDepth - 2).toDouble());
+    _rects = List.generate(
+        worldSize,
+        (eachRow) => List.generate(
+            worldSize,
+            (eachCol) => getRect(
+                  eachCol,
+                  eachRow,
+                  offsetBy: -offsetBy,
+                )));
     // rootNode = addBorder(addBorder(Node.CANONICAL_NODES[15]));
     _rootNode = getCanonicalOf(_worldDepth, randomize: randomize);
     // _auxMatrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => _auxMatrix[eachRow][eachCol]));
@@ -35,7 +49,7 @@ class HashlifeUniverse {
     _rootNode = node;
   }
 
-  Queue<Offset> stepOneGeneration() {
+  Queue<Rect> stepOneGeneration() {
     _rootNode = addBorder(calCenter(_rootNode));
 
     return plotNode(_rootNode, Offset.zero, Queue());
@@ -297,7 +311,7 @@ class HashlifeUniverse {
 
   // pos is the Absolute position in the grid this will be used by painter to draw rects.
   // todo: abort if no population in a given node.
-  Queue<Offset> plotNode(Node node, Offset pos, Queue<Offset> drawPos) {
+  Queue<Rect> plotNode(Node node, Offset pos, Queue<Rect> queueRects) {
     final depth = node.depth;
     assert(depth > 0);
     final BinaryNode nw, ne, sw, se;
@@ -310,22 +324,22 @@ class HashlifeUniverse {
 
       // changed the how to access pos to match how flutter dose things. flutter starts 0,0 top left
       // while in the python version it started bottom left.
-      if (nw.isAlive) drawPos.add(OffsetInt.fromInt(pos.dxInt, pos.dyInt));
-      if (ne.isAlive) drawPos.add(OffsetInt.fromInt(pos.dxInt + 1, pos.dyInt));
-      if (sw.isAlive) drawPos.add(OffsetInt.fromInt(pos.dxInt, pos.dyInt + 1));
-      if (se.isAlive) drawPos.add(OffsetInt.fromInt(pos.dxInt + 1, pos.dyInt + 1));
+      if (nw.isAlive) queueRects.add(_rects[pos.dyInt][pos.dxInt]);
+      if (ne.isAlive) queueRects.add(_rects[pos.dyInt][pos.dxInt + 1]);
+      if (sw.isAlive) queueRects.add(_rects[pos.dyInt + 1][pos.dxInt]);
+      if (se.isAlive) queueRects.add(_rects[pos.dyInt + 1][pos.dxInt + 1]);
     } else {
       // in case of nodes with area higher than 2x2 or depth higher than 10
       //
       // recurse to north. will have the same pos since 0,0 is top left.
-      plotNode(node.nw!, pos, drawPos);
+      plotNode(node.nw!, pos, queueRects);
       // the distance to the middle of the node
       final offsetToMidNode = pow(2, depth - 1).toInt();
-      plotNode(node.ne!, pos + OffsetInt.fromInt(offsetToMidNode, 0), drawPos);
-      plotNode(node.sw!, pos + OffsetInt.fromInt(0, offsetToMidNode), drawPos);
-      plotNode(node.se!, pos + OffsetInt.fromInt(offsetToMidNode, offsetToMidNode), drawPos);
+      plotNode(node.ne!, pos + OffsetInt.fromInt(offsetToMidNode, 0), queueRects);
+      plotNode(node.sw!, pos + OffsetInt.fromInt(0, offsetToMidNode), queueRects);
+      plotNode(node.se!, pos + OffsetInt.fromInt(offsetToMidNode, offsetToMidNode), queueRects);
     }
-    return drawPos;
+    return queueRects;
   }
 
   Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);

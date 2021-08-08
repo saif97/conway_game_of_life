@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
-import 'package:conway_game_of_life/core/utils.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -246,14 +245,14 @@ class _WCellsPrinter extends StatelessWidget {
     final offsetBy = Offset(pow(2, model.getUniverseSizeExponent - 1).toDouble(), pow(2, model.getUniverseSizeExponent - 1).toDouble());
 
     return RepaintBoundary(
-      child: Selector<ModelBoard, Queue<Offset>>(
+      child: Selector<ModelBoard, Queue<Rect>>(
         selector: (_, model) => model.queueHashlifeCells,
         // keep simulating even if there's a Repletion. otherwise in case of queue having the same values selector won't trigger.
         shouldRebuild: (previous, next) => true,
         builder: (context, value, child) {
           return CustomPaint(
             size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
-            painter: CellsPainter(value, offsetBy),
+            painter: CellsPainter(value),
             isComplex: true,
             willChange: true,
           );
@@ -264,17 +263,15 @@ class _WCellsPrinter extends StatelessWidget {
 }
 
 class CellsPainter extends CustomPainter {
-  final Queue<Offset> queueAliveCells;
-  final Offset offsetby;
+  final Queue<Rect> queueAliveRects;
 
-  const CellsPainter(this.queueAliveCells, this.offsetby);
+  const CellsPainter(this.queueAliveRects);
 
   @override
   void paint(Canvas canvas, Size size) {
     Offset offsetCell;
-    for (final cell in queueAliveCells) {
-      offsetCell = cell - offsetby;
-      canvas.drawRect(getRect(offsetCell.dxInt, offsetCell.dyInt), Paint()..color = Colors.blueAccent);
+    for (final rectAlive in queueAliveRects) {
+      canvas.drawRect(rectAlive, Paint()..color = Colors.blueAccent);
     }
   }
 

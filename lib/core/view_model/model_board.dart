@@ -6,21 +6,17 @@ import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/hashlife/node.dart';
 import 'package:conway_game_of_life/core/hashlife/universe_hashlife.dart';
 import 'package:conway_game_of_life/core/models/block.dart';
-import 'package:conway_game_of_life/core/models/cell.dart';
 import 'package:conway_game_of_life/core/saved_blocks.dart';
 import 'package:flutter/material.dart';
 
 class ModelBoard extends ChangeNotifier {
   late int _numOfColumns;
   late int _numOfRows;
-  int _universeSizeExponent = 6;
+  int _universeSizeExponent = 7;
   Timer? _timer;
   int _speedMultiplier = 0;
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
-  final Queue<Cell> queueAliveCells = Queue();
-  Queue<Offset> queueHashlifeCells = Queue();
-  late List<List<Cell>> _currentMatrixUniverse;
-  late List<List<Cell>> _initialMatrixUniverse;
+  Queue<Rect> queueHashlifeCells = Queue();
 
   late Block _insertedBlock = listBlocks[0];
 
@@ -60,13 +56,36 @@ class ModelBoard extends ChangeNotifier {
     });
   }
 
+  void initBoard({bool randomly = false}) {
+    throw "Unimplemented";
+
+    // final randomNumberGenerator = Random();
+    // _initialMatrixUniverse = List.generate(
+    // _numOfColumns,
+    // (eachCol) => List.generate(
+    // _numOfRows,
+    // (eachRow) {
+    // final bool isAlive = randomly && randomNumberGenerator.nextBool();
+    // final newCell = Cell(isAlive, upperLeftX: eachCol, upperLeftY: eachRow);
+    // // if (isAlive) queueAliveCells.add(newCell);
+    // return newCell;
+    // },
+    // ),
+    // );
+    // _currentMatrixUniverse = _initialMatrixUniverse;
+  }
+
   void saveState() {
-    _initialMatrixUniverse = _currentMatrixUniverse;
+    throw "Unimplemented";
+
+    // _initialMatrixUniverse = _currentMatrixUniverse;
   }
 
   void restoreState() {
-    _currentMatrixUniverse = _initialMatrixUniverse;
-    notifyListeners();
+    throw "Unimplemented";
+
+    // _currentMatrixUniverse = _initialMatrixUniverse;
+    // notifyListeners();
   }
 
   void pause() {
@@ -74,21 +93,23 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void confirmBlockInsertion() {
-    for (var eachCol = 0; eachCol < _insertedBlock.cols; eachCol++) {
-      for (var eachRow = 0; eachRow < _insertedBlock.rows; eachRow++) {
-        final eachBlockCellState = _insertedBlock.matrixBlock[eachCol][eachRow];
-        final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
-        final eachUniverseCell = _currentMatrixUniverse[posInUniverse.dxInt][posInUniverse.dyInt];
+    throw "Unimplemented";
 
-        if (eachBlockCellState) {
-          eachUniverseCell.revive();
-          queueAliveCells.add(eachUniverseCell);
-        } else {
-          eachUniverseCell.die();
-          queueAliveCells.remove(eachUniverseCell);
-        }
-      }
-    }
+    // for (var eachCol = 0; eachCol < _insertedBlock.cols; eachCol++) {
+    //   for (var eachRow = 0; eachRow < _insertedBlock.rows; eachRow++) {
+    //     final eachBlockCellState = _insertedBlock.matrixBlock[eachCol][eachRow];
+    //     final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
+    //     final eachUniverseCell = _currentMatrixUniverse[posInUniverse.dxInt][posInUniverse.dyInt];
+
+    //     if (eachBlockCellState) {
+    //       eachUniverseCell.revive();
+    //       queueAliveCells.add(eachUniverseCell);
+    //     } else {
+    //       eachUniverseCell.die();
+    //       queueAliveCells.remove(eachUniverseCell);
+    //     }
+    //   }
+    // }
   }
 
   void enableBlockInsertionMode(Block block) {
@@ -106,7 +127,6 @@ class ModelBoard extends ChangeNotifier {
    * GETTERS & SETTERS *
    *********************/
 
-  List<List<Cell>> get currentMatrixUniverse => _currentMatrixUniverse;
   int get speedMultiplier => _speedMultiplier;
   int get numOfColumns => _numOfColumns;
   int get numOfRows => _numOfRows;
@@ -150,31 +170,35 @@ class ModelBoard extends ChangeNotifier {
   }
 
   void setDrawPos(Offset newPos) {
-    if (_isWithinBoard(newPos)) return;
+    throw "Unimplemented";
 
-    final updatedCell = _currentMatrixUniverse[newPos.dxInt][newPos.dyInt];
-    updatedCell.switchState();
-    // have to re-assign it to new value otherwise selector won't get triggered.
-    if (updatedCell.isAlive)
-      queueAliveCells.add(updatedCell);
-    else
-      queueAliveCells.remove(updatedCell);
+    // if (_isWithinBoard(newPos)) return;
 
-    notifyListeners();
+    // final updatedCell = _currentMatrixUniverse[newPos.dxInt][newPos.dyInt];
+    // updatedCell.switchState();
+    // // have to re-assign it to new value otherwise selector won't get triggered.
+    // if (updatedCell.isAlive)
+    // queueAliveCells.add(updatedCell);
+    // else
+    // queueAliveCells.remove(updatedCell);
+
+    // notifyListeners();
   }
 
   bool _isWithinBoard(Offset pos) => pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
 
   void saveBlock() {
-    // don't save blocks of size bigger than 10 X 10
-    if (_numOfColumns > 10 && _numOfRows > 10) {
-      print('Block is too big to save');
-      return;
-    }
+    throw "Unimplemented";
 
-    final out = _currentMatrixUniverse.map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList()).toList();
+    // // don't save blocks of size bigger than 10 X 10
+    // if (_numOfColumns > 10 && _numOfRows > 10) {
+    //   print('Block is too big to save');
+    //   return;
+    // }
 
-    print(out);
+    // final out = _currentMatrixUniverse.map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList()).toList();
+
+    // print(out);
   }
 
   get getUniverseSizeExponent => this._universeSizeExponent;
