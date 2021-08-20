@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 class ModelBoard extends ChangeNotifier {
   late int _numOfColumns;
   late int _numOfRows;
-  int _universeSizeExponent = 7;
+  int _universeSizeExponent = 6;
   Timer? _timer;
   int _speedMultiplier = 0;
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
@@ -27,13 +27,9 @@ class ModelBoard extends ChangeNotifier {
   Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = true}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent + 1, randomize: randomly);
-    // testHL();
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent + 1, randomize: true);
     _numOfColumns = pow(2, _universeSizeExponent).toInt();
     _numOfRows = _numOfColumns;
-
-    // initBoard(randomly: randomly);
-    // universe = Universe(rows: _numOfRows, cols: _numOfColumns)..randomizeUniverse();
   }
 
   void testHL() {
@@ -41,7 +37,6 @@ class ModelBoard extends ChangeNotifier {
       Node.CANONICAL_NODES[0],
       Node.CANONICAL_NODES[0],
       Node.CANONICAL_NODES[3],
-      // Node.CANONICAL_NODES[2],
       Node.CANONICAL_NODES[0],
     ));
     _hashlifeUniverse.setRootNode(node);
@@ -201,7 +196,5 @@ class ModelBoard extends ChangeNotifier {
     // print(out);
   }
 
-  get getUniverseSizeExponent => this._universeSizeExponent;
-
-  set setUniverseSizeExponent(universeSizeExponent) => this._universeSizeExponent = universeSizeExponent;
+  List<int> get stats => _hashlifeUniverse.stats;
 }

@@ -11,7 +11,13 @@ class HashlifeUniverse {
   late Node _rootNode;
   final Map<Node, Node> _memoizedResults = {};
 
+  // hash nodes so I point to them when a node with similar quads is created.
   final Map<Node, Node> _memoizedNodes = {};
+
+  List<int> stats = List.filled(4, 0);
+
+  // number of Game of Life rules calls made in a given generation.
+  int _GOL_calls = 0;
 
   // Given a node, we'll lay it out here centered w/ a empty border and apply GoL rules.
   // Made it as a global var not to Overwhelm the Garbage Collector.
@@ -20,16 +26,16 @@ class HashlifeUniverse {
   // late List<List<BinaryNode>> _auxMatrixResult;
 
   int _generation = 0;
-  final int _worldDepth;
+  final int worldDepth;
   bool _isFastForward = false;
 
   final rand = Random();
 
   late final List<List<Rect>> _rects;
 
-  HashlifeUniverse(this._worldDepth, {bool randomize = false}) : assert(_worldDepth >= 2) {
-    final worldSize = pow(2, _worldDepth).toInt();
-    final offsetBy = Offset(pow(2, _worldDepth - 2).toDouble(), pow(2, _worldDepth - 2).toDouble());
+  HashlifeUniverse(this.worldDepth, {bool randomize = false}) : assert(worldDepth >= 2) {
+    final worldSize = pow(2, worldDepth).toInt();
+    final offsetBy = Offset(pow(2, worldDepth - 2).toDouble(), pow(2, worldDepth - 2).toDouble());
     _rects = List.generate(
         worldSize,
         (eachRow) => List.generate(
@@ -40,16 +46,19 @@ class HashlifeUniverse {
                   offsetBy: -offsetBy,
                 )));
     // rootNode = addBorder(addBorder(Node.CANONICAL_NODES[15]));
-    _rootNode = getCanonicalOf(_worldDepth, randomize: randomize);
+    _rootNode = getCanonicalOf(worldDepth, randomize: randomize);
     // _auxMatrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => _auxMatrix[eachRow][eachCol]));
     // _auxMatrixResult = _auxMatrix;
   }
+
   void setRootNode(Node node) {
-    assert(node.depth == _worldDepth, "root node (${node.depth}) & worldDepth ($_worldDepth) has to be the same.");
+    assert(node.depth == worldDepth, "root node (${node.depth}) & worldDepth ($worldDepth) has to be the same.");
     _rootNode = node;
   }
 
   Queue<Rect> stepOneGeneration() {
+    _updateStats();
+    _GOL_calls = 0;
     _rootNode = addBorder(calCenter(_rootNode));
 
     return plotNode(_rootNode, Offset.zero, Queue());
@@ -63,9 +72,11 @@ class HashlifeUniverse {
   // If the Compiled node is Previously hashed return the hash. Otherwise create a new one.
   // by doing so, only newly seen pointers are created. pointers are a mere recursive pointers to leaf Canonical nodes.
   Node createOrgetFromHash(Node nw, Node ne, Node sw, Node se) {
-    assert(nw.depth + 1 <= _worldDepth, "Parent node can't have death higher than the world depth.");
+    assert(nw.depth + 1 <= worldDepth, "Parent node can't have death higher than the world depth.");
     // in case of Canonical
     late Node out;
+
+    // in case of 2x2 node
     if (nw.depth == 0) {
       out = getCanonical(nw as BinaryNode, ne as BinaryNode, sw as BinaryNode, se as BinaryNode);
     } else {
@@ -88,7 +99,7 @@ class HashlifeUniverse {
     if (depth == 1) {
       return Node.CANONICAL_NODES[randomize ? rand.nextInt(15) + 1 : 0];
     } else {
-      return Node.fromQuads(
+      return createOrgetFromHash(
         getCanonicalOf(depth - 1, randomize: randomize),
         getCanonicalOf(depth - 1, randomize: randomize),
         getCanonicalOf(depth - 1, randomize: randomize),
@@ -100,7 +111,7 @@ class HashlifeUniverse {
   // given a node add a border around it so it's centered.
   Node addBorder(Node node) {
     assert(node.depth >= 1, "Node can't be binary.");
-    Node border;
+    late final Node border;
     if (node.depth == 1)
       border = BinaryNode.OFF;
     else
@@ -121,6 +132,7 @@ class HashlifeUniverse {
   }
 
   List<List<BinaryNode>> applyGoLRulesToAux(List<List<BinaryNode>> auxMatrix) {
+    _GOL_calls++;
     final matrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => auxMatrix[eachRow][eachCol]));
     for (var eachRow = 1; eachRow < 5; eachRow++) {
       for (var eachCol = 1; eachCol < 5; eachCol++) {
@@ -151,12 +163,6 @@ class HashlifeUniverse {
         if (numAliveNeighbors < 2 || numAliveNeighbors > 3) {
           matrixResult[eachRow][eachCol] = BinaryNode.OFF;
         } else {
-          // if (numAliveNeighbors == 2) {
-          // if (auxMatrix[eachRow][eachCol] == BinaryNode.ON) {
-          // matrixResult[eachRow][eachCol] = BinaryNode.ON;
-          // }
-          // }
-          // "Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction."
           if (numAliveNeighbors == 3) {
             matrixResult[eachRow][eachCol] = BinaryNode.ON;
           }
@@ -228,8 +234,8 @@ class HashlifeUniverse {
   Node calCenter(Node node) {
     assert(node.depth > 1);
     // increment generation if we are processing the top most node (whole universe)
-    if (node.depth == _worldDepth) {
-      _generation += 2 ^ _worldDepth;
+    if (node.depth == worldDepth) {
+      _generation += 2 ^ worldDepth;
     }
 
     if (_memoizedResults.containsKey(node)) {
@@ -289,26 +295,6 @@ class HashlifeUniverse {
     return result;
   }
 
-  // // given a node, assemble a hash of all of its sub nodes recursively.
-  // Map<Node, Node> getNodeList(Node node, Map<Node, Node> nodeList) {
-  // if (node.area > 0) {
-  // if (node.depth == 1) {
-  // nodeList[node] = node;
-  // } else {
-  // if (node.sw!.area > 0) nodeList[node.sw!] = node.sw!;
-  // if (node.se!.area > 0) nodeList[node.se!] = node.se!;
-  // if (node.nw!.area > 0) nodeList[node.nw!] = node.nw!;
-  // if (node.ne!.area > 0) nodeList[node.ne!] = node.ne!;
-
-  // getNodeList(node.sw!, nodeList);
-  // getNodeList(node.se!, nodeList);
-  // getNodeList(node.nw!, nodeList);
-  // getNodeList(node.ne!, nodeList);
-  // }
-  // }
-  // return nodeList;
-  // }
-
   // pos is the Absolute position in the grid this will be used by painter to draw rects.
   // todo: abort if no population in a given node.
   Queue<Rect> plotNode(Node node, Offset pos, Queue<Rect> queueRects) {
@@ -342,5 +328,14 @@ class HashlifeUniverse {
     return queueRects;
   }
 
+  // used for unite testing only
   Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);
+  Map<Node, Node> get memoizedResults => Map.from(_memoizedResults);
+
+  void _updateStats() {
+    stats[0] = _rootNode.population;
+    stats[1] = _GOL_calls;
+    stats[2] = _memoizedNodes.length;
+    stats[3] = _memoizedResults.length;
+  }
 }

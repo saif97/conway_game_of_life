@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
@@ -58,8 +57,28 @@ class _Settings extends StatelessWidget {
           ),
           const SetBoardSize(),
           TextButton(onPressed: model.saveBlock, child: const Text("Save Block")),
+          Container(width: 20),
+          const _Stats(),
         ],
       ),
+    );
+  }
+}
+
+class _Stats extends StatelessWidget {
+  const _Stats({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final ModelBoard model = Provider.of(context, listen: true);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text("Population:      ${model.stats[0]}"),
+        Text("GoL rules calls: ${model.stats[1]}"),
+        Text("Node hash size:     ${model.stats[2]}"),
+        Text("result hash size:     ${model.stats[3]}"),
+      ],
     );
   }
 }
@@ -242,7 +261,6 @@ class _WCellsPrinter extends StatelessWidget {
   Widget build(BuildContext context) {
     final ModelBoard model = Provider.of(context, listen: false);
     // todo: clean it up!!!!
-    final offsetBy = Offset(pow(2, model.getUniverseSizeExponent - 1).toDouble(), pow(2, model.getUniverseSizeExponent - 1).toDouble());
 
     return RepaintBoundary(
       child: Selector<ModelBoard, Queue<Rect>>(

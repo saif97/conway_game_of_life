@@ -1,4 +1,3 @@
-// @dart=2.9
 
 import 'package:conway_game_of_life/playground.dart';
 import 'package:flutter/material.dart';

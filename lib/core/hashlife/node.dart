@@ -1,13 +1,13 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-
 class Node {
   final Node? nw, ne, sw, se;
   final int depth;
   final bool isAlive;
   final int population;
   final int area;
+  // to avoid recursively calculating hashcode, only calculate it when it's not set.
+
   Node._({
     this.nw,
     this.ne,
@@ -18,8 +18,10 @@ class Node {
     required this.isAlive,
     required this.population,
   })  : // make sure that all nodes share the same depth.
-        assert((nw?.depth ?? 0) == (ne?.depth ?? 0) && (nw?.depth ?? 0) == (se?.depth ?? 0) && (nw?.depth ?? 0) == (sw?.depth ?? 0),
-            "Check if all nodes have the same depth."),
+        assert(
+          (nw?.depth ?? 0) == (ne?.depth ?? 0) && (nw?.depth ?? 0) == (se?.depth ?? 0) && (nw?.depth ?? 0) == (sw?.depth ?? 0),
+          "Check if all nodes have the same depth.\n nw: ${nw?.depth ?? 0},  ne: ${ne?.depth ?? 0}, sw: ${sw?.depth ?? 0}, se: ${se?.depth ?? 0}\n",
+        ),
         assert(pow(2, depth) * pow(2, depth) == area);
 
   //
@@ -48,11 +50,6 @@ class Node {
       );
 
   @override
-  bool operator ==(Object other) {
-    return other is Node && identical(nw, other.nw) && identical(ne, other.ne) && identical(sw, other.sw) && identical(se, other.se);
-  }
-
-  @override
   String toString() {
     if (depth == 0) return (isAlive ? 1 : 0).toString();
     // base case to print a 2x2 grid
@@ -65,8 +62,25 @@ class Node {
   }
 
   @override
+  bool operator ==(Object other) {
+    // if not the same objects.
+    if (other is! Node) return false;
+
+    if (depth != other.depth) return false;
+    if (depth == 0) return isAlive == other.isAlive;
+    return nw == other.nw && ne == other.ne && sw == other.sw && se == other.se;
+  }
+
+  @override
   // TODO: implement hashCode
-  int get hashCode => hashValues(identityHashCode(nw), identityHashCode(ne), identityHashCode(sw), identityHashCode(se));
+  int get hashCode {
+    if (depth == 0)
+      return population;
+    else
+      return identityHashCode(nw) + (11 * identityHashCode(ne)) + (101 * identityHashCode(sw)) + (1007 * identityHashCode(se));
+
+    // return hashValues(identityHashCode(nw), identityHashCode(ne), identityHashCode(sw), identityHashCode(se));
+  }
 
   static final CANONICAL_NODES = [
     Node.FromInt(0, 0, 0, 0),
