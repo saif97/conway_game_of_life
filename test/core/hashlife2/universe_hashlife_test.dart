@@ -8,6 +8,14 @@ import 'package:conway_game_of_life/core/utils.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group("Test Instantiating universe", () {
+    test("test Init function", () {
+      final HashlifeUniverse universe = HashlifeUniverse(3);
+      expect(universe.universePopulation , 0);
+
+    });
+  });
+
   group("Testing Hashlife Universe", () {
     test("As nodes Recursively added, depth should reflect that.", () {
       final node = Node.fromQuads(BinaryNode.ON, BinaryNode.OFF, BinaryNode.ON, BinaryNode.ON);
@@ -55,21 +63,21 @@ void main() {
   group("Test create or hash", () {
     test("given a canonical node, test if it returns a canonical node w/o caching it.", () {
       HashlifeUniverse universe = HashlifeUniverse(2);
-      final node = universe.createOrgetFromHash(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
+      final node = universe.createOrGetHashed(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
 
       expect(node, Node.CANONICAL_NODES[4]);
 
       // check if the node is cached since it's canonicals aren't in the hash by Default.
       expect(universe.memoizedNodes.length, 1);
 
-      universe.createOrgetFromHash(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
+      universe.createOrGetHashed(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
       expect(universe.memoizedNodes.length, 1, reason: "The function should return the same node since it's cached.");
     });
 
     test("given a non-canonical node check if it's cached", () {
       HashlifeUniverse universe = HashlifeUniverse(2);
       // 8x8 node
-      final node = universe.createOrgetFromHash(
+      final node = universe.createOrGetHashed(
         Node.FromInt(0, 0, 0, 1),
         Node.FromInt(0, 0, 0, 0),
         Node.FromInt(0, 1, 0, 0),
@@ -97,22 +105,22 @@ void main() {
       expect(universe.memoizedNodes.length, 8);
 
       // create a node of size 32x32
-      final hashedNode = universe.createOrgetFromHash(node, node, node, node);
+      final hashedNode = universe.createOrGetHashed(node, node, node, node);
       expect(universe.memoizedNodes.length, 9);
 
-      universe.createOrgetFromHash(node, node, node, node);
+      universe.createOrGetHashed(node, node, node, node);
       expect(universe.memoizedNodes.length, 9, reason: "Same subnodes should return the same node w/o hashing");
 
       final node2 = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
       expect(universe.memoizedNodes.length, 9, reason: "Same subnodes should return the same node w/o hashing");
 
       // create a node of size 32x32
-      universe.createOrgetFromHash(node2, node2, node2, node2);
+      universe.createOrGetHashed(node2, node2, node2, node2);
       expect(universe.memoizedNodes.length, 9);
 
       final node3 = universe.addBorder(universe.addBorder(universe.addBorder(Node.FromInt(0, 0, 0, 0))));
 
-      universe.createOrgetFromHash(node3, node3, node3, node3);
+      universe.createOrGetHashed(node3, node3, node3, node3);
       expect(universe.memoizedNodes.length, 9);
     });
   });
@@ -258,13 +266,13 @@ void main() {
       // node size 16x16
       final node = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
 
-      final r1 = universe.calCenter(universe.createOrgetFromHash(node, node, node, node));
+      final r1 = universe.calCenter(universe.createOrGetHashed(node, node, node, node));
 
       final lenMemoizedNodes1 = universe.memoizedNodes.length;
       final lenMemoizedResults1 = universe.memoizedResults.length;
 
       final node2 = universe.addBorder(universe.addBorder(universe.addBorder(Node.FromInt(0, 0, 0, 0))));
-      final r2 = universe.calCenter(universe.createOrgetFromHash(node2, node2, node2, node2));
+      final r2 = universe.calCenter(universe.createOrGetHashed(node2, node2, node2, node2));
 
       final lenMemoizedNodes2 = universe.memoizedNodes.length;
       final lenMemoizedResults2 = universe.memoizedResults.length;
@@ -328,6 +336,22 @@ void main() {
       // final out = universe.plotNode(result, OffsetInt.fromInt(0, 0), Queue());
       // print(out);
       // expect(out, Node.CANONICAL_NODES[15]);
+    });
+  });
+
+  group("Test Block Insertion", () {
+    test("Test Inserting full 2x2 block into an empty universe", () {
+      final HashlifeUniverse universe = HashlifeUniverse(2);
+
+      const block = [
+        [true, true],
+        [true, true]
+      ];
+
+      universe.insertBlock(block, OffsetInt.fromInt(1, 1));
+      print(universe.plotRootNode());
+
+      expect(universe.universePopulation, 4);
     });
   });
 }

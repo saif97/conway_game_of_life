@@ -14,7 +14,7 @@ class ScreenHome extends StatelessWidget {
         title: const Text("Game of Life"),
       ),
       body: ChangeNotifierProvider(
-        create: (_) => ModelBoard(randomly: true)..play(),
+        create: (_) => ModelBoard()..play(),
         child: const _Main(),
       ),
     );

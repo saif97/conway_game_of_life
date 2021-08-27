@@ -100,6 +100,8 @@ class Node {
     Node.FromInt(1, 1, 1, 0),
     Node.FromInt(1, 1, 1, 1),
   ];
+
+
 }
 
 class BinaryNode extends Node {

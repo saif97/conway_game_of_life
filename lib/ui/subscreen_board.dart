@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/models/cell.dart';
+import 'package:conway_game_of_life/core/utils.dart';
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -239,9 +240,12 @@ class _Board extends StatelessWidget {
             selector: (_, model) => model.isModeInsertBlock,
             builder: (context, value, child) => Stack(
               children: [
-                const _WGridPainter(),
                 // const RepaintBoundary(child: WidUniverse()),
-                const _WCellsPrinter(),
+                const Align(
+                  alignment: Alignment(150, 150),
+                  child: _WCellsPrinter(),
+                ),
+                const _WGridPainter(),
                 if (value) const _WInsertedBlockPainter(),
               ],
             ),
@@ -380,7 +384,7 @@ class GridPainter extends CustomPainter {
     for (var eachCol = 0; eachCol < cols; eachCol++) {
       for (var eachRow = 0; eachRow < rows; eachRow++) {
         canvas.drawRect(
-          Cell.getRect(eachCol, eachRow),
+          getRect(eachCol, eachRow),
           Paint()
             ..strokeWidth = 1
             ..style = PaintingStyle.stroke,

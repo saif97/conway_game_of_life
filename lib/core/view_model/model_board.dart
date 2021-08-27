@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/hashlife/node.dart';
@@ -15,6 +14,7 @@ class ModelBoard extends ChangeNotifier {
   int _universeSizeExponent = 6;
   Timer? _timer;
   int _speedMultiplier = 0;
+
   // notify listener in itself dosen't trigger the selector to repaint the cells. I've to reasign to a new value.
   Queue<Rect> queueHashlifeCells = Queue();
 
@@ -24,11 +24,13 @@ class ModelBoard extends ChangeNotifier {
 
   bool _isModKeyPressed = false;
   bool _isModeInsertBlock = false;
+  @Deprecated("I should pass it as argument to the function insertion.")
   Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = true}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent + 1, randomize: true);
-    _numOfColumns = pow(2, _universeSizeExponent).toInt();
+    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: randomly);
+
+    _numOfColumns = 1 << (_universeSizeExponent);
     _numOfRows = _numOfColumns;
   }
 
@@ -51,24 +53,7 @@ class ModelBoard extends ChangeNotifier {
     });
   }
 
-  void initBoard({bool randomly = false}) {
-    throw "Unimplemented";
-
-    // final randomNumberGenerator = Random();
-    // _initialMatrixUniverse = List.generate(
-    // _numOfColumns,
-    // (eachCol) => List.generate(
-    // _numOfRows,
-    // (eachRow) {
-    // final bool isAlive = randomly && randomNumberGenerator.nextBool();
-    // final newCell = Cell(isAlive, upperLeftX: eachCol, upperLeftY: eachRow);
-    // // if (isAlive) queueAliveCells.add(newCell);
-    // return newCell;
-    // },
-    // ),
-    // );
-    // _currentMatrixUniverse = _initialMatrixUniverse;
-  }
+  void initBoard({bool randomly = false}) => _hashlifeUniverse.initUniverse(randomize: randomly);
 
   void saveState() {
     throw "Unimplemented";
@@ -76,35 +61,17 @@ class ModelBoard extends ChangeNotifier {
     // _initialMatrixUniverse = _currentMatrixUniverse;
   }
 
-  void restoreState() {
-    throw "Unimplemented";
-
-    // _currentMatrixUniverse = _initialMatrixUniverse;
-    // notifyListeners();
-  }
+  void restoreState() => _hashlifeUniverse.resetUniverse();
 
   void pause() {
     _timer?.cancel();
   }
 
   void confirmBlockInsertion() {
-    throw "Unimplemented";
+    _hashlifeUniverse.insertBlock(_insertedBlock.matrixBlock, _mousePosInBoard);
 
-    // for (var eachCol = 0; eachCol < _insertedBlock.cols; eachCol++) {
-    //   for (var eachRow = 0; eachRow < _insertedBlock.rows; eachRow++) {
-    //     final eachBlockCellState = _insertedBlock.matrixBlock[eachCol][eachRow];
-    //     final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
-    //     final eachUniverseCell = _currentMatrixUniverse[posInUniverse.dxInt][posInUniverse.dyInt];
-
-    //     if (eachBlockCellState) {
-    //       eachUniverseCell.revive();
-    //       queueAliveCells.add(eachUniverseCell);
-    //     } else {
-    //       eachUniverseCell.die();
-    //       queueAliveCells.remove(eachUniverseCell);
-    //     }
-    //   }
-    // }
+    queueHashlifeCells = _hashlifeUniverse.plotRootNode();
+    notifyListeners();
   }
 
   void enableBlockInsertionMode(Block block) {
@@ -116,6 +83,22 @@ class ModelBoard extends ChangeNotifier {
   void disableBlockInsertionMode() {
     _isModeInsertBlock = false;
     play();
+  }
+
+  bool _isWithinBoard(Offset pos) => pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
+
+  void saveBlock() {
+    throw "Unimplemented";
+
+    // // don't save blocks of size bigger than 10 X 10
+    // if (_numOfColumns > 10 && _numOfRows > 10) {
+    //   print('Block is too big to save');
+    //   return;
+    // }
+
+    // final out = _currentMatrixUniverse.map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList()).toList();
+
+    // print(out);
   }
 
   /*********************
@@ -130,6 +113,8 @@ class ModelBoard extends ChangeNotifier {
   bool get isModeInsertBlock => _isModeInsertBlock;
   Block get insertedBlock => _insertedBlock;
   Offset get mousePosInBoard => _mousePosInBoard;
+
+  List<int> get stats => _hashlifeUniverse.stats;
 
   set speedMultiplier(int newValue) {
     if (newValue != _speedMultiplier) {
@@ -179,22 +164,4 @@ class ModelBoard extends ChangeNotifier {
 
     // notifyListeners();
   }
-
-  bool _isWithinBoard(Offset pos) => pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
-
-  void saveBlock() {
-    throw "Unimplemented";
-
-    // // don't save blocks of size bigger than 10 X 10
-    // if (_numOfColumns > 10 && _numOfRows > 10) {
-    //   print('Block is too big to save');
-    //   return;
-    // }
-
-    // final out = _currentMatrixUniverse.map((eachRow) => eachRow.map((eachCell) => eachCell.isAlive).toList()).toList();
-
-    // print(out);
-  }
-
-  List<int> get stats => _hashlifeUniverse.stats;
 }

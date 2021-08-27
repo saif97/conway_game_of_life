@@ -9,6 +9,7 @@ import 'node.dart';
 
 class HashlifeUniverse {
   late Node _rootNode;
+  late Node _initialNode;
   final Map<Node, Node> _memoizedResults = {};
 
   // hash nodes so I point to them when a node with similar quads is created.
@@ -24,18 +25,16 @@ class HashlifeUniverse {
   // final _auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
   // on the first Iteration, the result list should be same as working matrix. otherwise GoL will miss when number of Neighbors =2
   // late List<List<BinaryNode>> _auxMatrixResult;
-
   int _generation = 0;
   final int worldDepth;
   bool _isFastForward = false;
-
   final rand = Random();
 
   late final List<List<Rect>> _rects;
 
   HashlifeUniverse(this.worldDepth, {bool randomize = false}) : assert(worldDepth >= 2) {
-    final worldSize = pow(2, worldDepth).toInt();
-    final offsetBy = Offset(pow(2, worldDepth - 2).toDouble(), pow(2, worldDepth - 2).toDouble());
+    final worldSize = 1 << (worldDepth);
+    final offsetBy = OffsetInt.fromInt(1 << (worldDepth - 2), 1 << (worldDepth - 2));
     _rects = List.generate(
         worldSize,
         (eachRow) => List.generate(
@@ -43,12 +42,21 @@ class HashlifeUniverse {
             (eachCol) => getRect(
                   eachCol,
                   eachRow,
-                  offsetBy: -offsetBy,
+                  // offsetBy: -offsetBy,
                 )));
-    // rootNode = addBorder(addBorder(Node.CANONICAL_NODES[15]));
+    initUniverse(randomize: randomize);
+
+    assert(worldDepth == _rootNode.depth, "World Depth has to equal to the depth of the root node");
+    assert(_rects.length == (1 << worldDepth), "Length of rects has to equal depth of the world");
+    assert(_rects.length == _rects[0].length, "rects has to be square.");
+  }
+
+  void initUniverse({bool randomize = false}) {
     _rootNode = getCanonicalOf(worldDepth, randomize: randomize);
-    // _auxMatrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => _auxMatrix[eachRow][eachCol]));
-    // _auxMatrixResult = _auxMatrix;
+    _initialNode = createOrGetHashed(_rootNode.nw!, _rootNode.ne!, _rootNode.sw!, _rootNode.se!);
+
+    assert(_rootNode == _initialNode);
+    assert(_rootNode.hashCode == _initialNode.hashCode);
   }
 
   void setRootNode(Node node) {
@@ -59,9 +67,9 @@ class HashlifeUniverse {
   Queue<Rect> stepOneGeneration() {
     _updateStats();
     _GOL_calls = 0;
-    _rootNode = addBorder(calCenter(_rootNode));
+    _rootNode = (calCenter(addBorder(_rootNode)));
 
-    return plotNode(_rootNode, Offset.zero, Queue());
+    return plotRootNode();
   }
 
   // Given the list of Canonical nodes is of size 16 (1 1 1 1), I can get constant time access if I use bit Manipulation.
@@ -71,8 +79,8 @@ class HashlifeUniverse {
 
   // If the Compiled node is Previously hashed return the hash. Otherwise create a new one.
   // by doing so, only newly seen pointers are created. pointers are a mere recursive pointers to leaf Canonical nodes.
-  Node createOrgetFromHash(Node nw, Node ne, Node sw, Node se) {
-    assert(nw.depth + 1 <= worldDepth, "Parent node can't have death higher than the world depth.");
+  Node createOrGetHashed(Node nw, Node ne, Node sw, Node se) {
+    // assert(nw.depth + 1 <= worldDepth, "Parent node can't have death higher than the world depth.");
     // in case of Canonical
     late Node out;
 
@@ -99,7 +107,7 @@ class HashlifeUniverse {
     if (depth == 1) {
       return Node.CANONICAL_NODES[randomize ? rand.nextInt(15) + 1 : 0];
     } else {
-      return createOrgetFromHash(
+      return createOrGetHashed(
         getCanonicalOf(depth - 1, randomize: randomize),
         getCanonicalOf(depth - 1, randomize: randomize),
         getCanonicalOf(depth - 1, randomize: randomize),
@@ -117,18 +125,18 @@ class HashlifeUniverse {
     else
       border = getCanonicalOf(node.depth - 1);
 
-    final resultNW = createOrgetFromHash(border, border, border, node.nw!);
-    final resultNe = createOrgetFromHash(border, border, node.ne!, border);
-    final resultSW = createOrgetFromHash(border, node.sw!, border, border);
-    final resultSE = createOrgetFromHash(node.se!, border, border, border);
+    final resultNW = createOrGetHashed(border, border, border, node.nw!);
+    final resultNe = createOrGetHashed(border, border, node.ne!, border);
+    final resultSW = createOrGetHashed(border, node.sw!, border, border);
+    final resultSE = createOrGetHashed(node.se!, border, border, border);
 
-    return createOrgetFromHash(resultNW, resultNe, resultSW, resultSE);
+    return createOrGetHashed(resultNW, resultNe, resultSW, resultSE);
   }
 
   Node getCenterNode(Node node) {
     assert(node.depth > 1, "Only works on node of depth 2^2 (4x4 grid) ");
 
-    return createOrgetFromHash(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
+    return createOrGetHashed(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
   }
 
   List<List<BinaryNode>> applyGoLRulesToAux(List<List<BinaryNode>> auxMatrix) {
@@ -201,32 +209,32 @@ class HashlifeUniverse {
   }
 
   Node getNodeFromAux(List<List<BinaryNode>> matrix) {
-    final nw = createOrgetFromHash(
+    final nw = createOrGetHashed(
       matrix[1][1],
       matrix[1][2],
       matrix[2][1],
       matrix[2][2],
     );
-    final ne = createOrgetFromHash(
+    final ne = createOrGetHashed(
       matrix[1][3],
       matrix[1][4],
       matrix[2][3],
       matrix[2][4],
     );
-    final sw = createOrgetFromHash(
+    final sw = createOrGetHashed(
       matrix[3][1],
       matrix[3][2],
       matrix[4][1],
       matrix[4][2],
     );
-    final se = createOrgetFromHash(
+    final se = createOrGetHashed(
       matrix[3][3],
       matrix[3][4],
       matrix[4][3],
       matrix[4][4],
     );
 
-    return createOrgetFromHash(nw, ne, sw, se);
+    return createOrGetHashed(nw, ne, sw, se);
   }
 
   // given a node, process the center result.
@@ -249,17 +257,17 @@ class HashlifeUniverse {
 
       result = getCenterNode(getNodeFromAux(resultAx));
     } else {
-      final node11 = createOrgetFromHash(node.nw!.nw!, node.nw!.ne!, node.nw!.sw!, node.nw!.se!);
-      final node21 = createOrgetFromHash(node.nw!.sw!, node.nw!.se!, node.sw!.nw!, node.sw!.ne!);
-      final node31 = createOrgetFromHash(node.sw!.nw!, node.sw!.ne!, node.sw!.sw!, node.sw!.se!);
+      final node11 = createOrGetHashed(node.nw!.nw!, node.nw!.ne!, node.nw!.sw!, node.nw!.se!);
+      final node21 = createOrGetHashed(node.nw!.sw!, node.nw!.se!, node.sw!.nw!, node.sw!.ne!);
+      final node31 = createOrGetHashed(node.sw!.nw!, node.sw!.ne!, node.sw!.sw!, node.sw!.se!);
 
-      final node12 = createOrgetFromHash(node.nw!.ne!, node.ne!.nw!, node.nw!.se!, node.ne!.sw!);
-      final node22 = createOrgetFromHash(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
-      final node32 = createOrgetFromHash(node.sw!.ne!, node.se!.nw!, node.sw!.se!, node.se!.sw!);
+      final node12 = createOrGetHashed(node.nw!.ne!, node.ne!.nw!, node.nw!.se!, node.ne!.sw!);
+      final node22 = createOrGetHashed(node.nw!.se!, node.ne!.sw!, node.sw!.ne!, node.se!.nw!);
+      final node32 = createOrGetHashed(node.sw!.ne!, node.se!.nw!, node.sw!.se!, node.se!.sw!);
 
-      final node13 = createOrgetFromHash(node.ne!.nw!, node.ne!.ne!, node.ne!.sw!, node.ne!.se!);
-      final node23 = createOrgetFromHash(node.ne!.sw!, node.ne!.se!, node.se!.nw!, node.se!.ne!);
-      final node33 = createOrgetFromHash(node.se!.nw!, node.se!.ne!, node.se!.sw!, node.se!.se!);
+      final node13 = createOrGetHashed(node.ne!.nw!, node.ne!.ne!, node.ne!.sw!, node.ne!.se!);
+      final node23 = createOrGetHashed(node.ne!.sw!, node.ne!.se!, node.se!.nw!, node.se!.ne!);
+      final node33 = createOrGetHashed(node.se!.nw!, node.se!.ne!, node.se!.sw!, node.se!.se!);
 
       // step the auxiliary nodes!
 
@@ -276,18 +284,18 @@ class HashlifeUniverse {
       final Node nw, ne, sw, se;
 
       if (_isFastForward) {
-        nw = calCenter(createOrgetFromHash(res11, res12, res21, res22));
-        ne = calCenter(createOrgetFromHash(res12, res13, res22, res23));
-        sw = calCenter(createOrgetFromHash(res21, res22, res31, res32));
-        se = calCenter(createOrgetFromHash(res22, res23, res32, res33));
+        nw = calCenter(createOrGetHashed(res11, res12, res21, res22));
+        ne = calCenter(createOrGetHashed(res12, res13, res22, res23));
+        sw = calCenter(createOrGetHashed(res21, res22, res31, res32));
+        se = calCenter(createOrGetHashed(res22, res23, res32, res33));
       } else {
-        nw = getCenterNode(createOrgetFromHash(res11, res12, res21, res22));
-        ne = getCenterNode(createOrgetFromHash(res12, res13, res22, res23));
-        sw = getCenterNode(createOrgetFromHash(res21, res22, res31, res32));
-        se = getCenterNode(createOrgetFromHash(res22, res23, res32, res33));
+        nw = getCenterNode(createOrGetHashed(res11, res12, res21, res22));
+        ne = getCenterNode(createOrGetHashed(res12, res13, res22, res23));
+        sw = getCenterNode(createOrGetHashed(res21, res22, res31, res32));
+        se = getCenterNode(createOrGetHashed(res22, res23, res32, res33));
       }
 
-      result = createOrgetFromHash(nw, ne, sw, se);
+      result = createOrGetHashed(nw, ne, sw, se);
     }
 
     _memoizedResults[node] = result;
@@ -295,11 +303,15 @@ class HashlifeUniverse {
     return result;
   }
 
+  Queue<Rect> plotRootNode() => plotNode(_rootNode, Offset.zero, Queue());
+  // Queue<Rect> plotRootNode() => plotNode(_rootNode, -Offset(pow(2, worldDepth - 2).toDouble(), pow(2, worldDepth - 2).toDouble()), Queue());
   // pos is the Absolute position in the grid this will be used by painter to draw rects.
   // todo: abort if no population in a given node.
+  @visibleForTesting
   Queue<Rect> plotNode(Node node, Offset pos, Queue<Rect> queueRects) {
     final depth = node.depth;
     assert(depth > 0);
+    assert(pos.dx >= 0 && pos.dy >= 0);
     final BinaryNode nw, ne, sw, se;
     // in case of a single
     if (depth == 1) {
@@ -328,14 +340,114 @@ class HashlifeUniverse {
     return queueRects;
   }
 
-  // used for unite testing only
-  Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);
-  Map<Node, Node> get memoizedResults => Map.from(_memoizedResults);
-
   void _updateStats() {
     stats[0] = _rootNode.population;
     stats[1] = _GOL_calls;
     stats[2] = _memoizedNodes.length;
     stats[3] = _memoizedResults.length;
   }
+
+  void resetUniverse() => _rootNode = _initialNode;
+
+  void insertBlock(List<List<bool>> block, Offset mousePosInBoard) {
+    final midPos = OffsetInt.fromInt(1 << (_rootNode.depth - 1), 1 << (_rootNode.depth - 1));
+    for (var eachRow = 0; eachRow < block.length; eachRow++) {
+      for (var eachCol = 0; eachCol < block[eachRow].length; eachCol++) {
+        final eachBlockCellState = block[eachRow][eachCol];
+        final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
+
+        _rootNode = _setCellState(_rootNode, eachBlockCellState, posInUniverse, midPos);
+        // _setBit(posInUniverse.dxInt, posInUniverse.dyInt, _rootNode, eachBlockCellState);
+      }
+    }
+  }
+
+  /**
+    * Set a bit in this node in its relative coordinate system; returns a whole new
+    * node since our nodes are immutable.
+    *
+    * In the recursive call, we simply adjust the coordinate system and call down a
+    * level.
+    */
+  @Deprecated("")
+  Node _setBit(int x, int y, Node node, bool state) {
+    assert(x > 0);
+
+    // the binary node we're looking for
+    if (node.depth == 0)
+      return state ? BinaryNode.ON : BinaryNode.OFF;
+    else {
+      late final int offset;
+      // in the case when depth = 1, set the offset to 1 otherwise bit shift by -1 which is invalid.
+      if (node.depth == 1)
+        offset = 1;
+      // distance from center of this node to center of subnode is
+      // one fourth the size of this node.
+      else
+        offset = 1 << (node.depth - 2);
+
+      // if left
+      if (x < 0) {
+        if (y < 0)
+          return createOrGetHashed(_setBit(x + offset, y + offset, node.nw!, state), node.ne!, node.sw!, node.se!);
+        else
+          return createOrGetHashed(node.nw!, node.ne!, _setBit(x + offset, y - offset, node.sw!, state), node.se!);
+      } else {
+        if (y < 0)
+          return createOrGetHashed(node.nw!, _setBit(x - offset, y + offset, node.ne!, state), node.sw!, node.se!);
+        else
+          return createOrGetHashed(node.nw!, node.ne!, node.sw!, _setBit(x - offset, y - offset, node.se!, state));
+      }
+    }
+  }
+
+  // currently, it's log N per cell. in an NxN it'll be N^2 log N.
+  // todo: performance can be improved by changing a 2x2 at a time.
+  Node _setCellState(Node node, bool state, Offset targetPos, Offset midPos) {
+    // base case of recursion.
+    if (node is BinaryNode) {
+      return state ? BinaryNode.ON : BinaryNode.OFF;
+    }
+
+    // given a 16x16 node (4x quads of area 8x8), it's mid is 8x8. if I want to recurse to its upper right quad, I need to move 4 steps.
+    //  that's depth - 2.
+    // in the case when depth = 1, set the offset to 1 otherwise bit shift by -1 which is invalid.
+    late final int mid;
+
+    if (node.depth == 1)
+      mid = 1;
+    // distance from center of this node to center of subnode is
+    // one fourth the size of this node.
+    else
+      mid = 1 << (node.depth - 2);
+    Offset newMid;
+
+    // target is up
+    if (targetPos.dy < midPos.dy) {
+      // is left
+      if (targetPos.dx < midPos.dx) {
+        // NW
+        newMid = OffsetInt.fromInt(midPos.dxInt - mid, midPos.dyInt - mid);
+        return createOrGetHashed(_setCellState(node.nw!, state, targetPos, newMid), node.ne!, node.sw!, node.se!);
+      } else {
+        // NE
+        newMid = OffsetInt.fromInt(midPos.dxInt + mid, midPos.dyInt - mid);
+        return createOrGetHashed(node.nw!, _setCellState(node.ne!, state, targetPos, newMid), node.sw!, node.se!);
+      }
+    } else {
+      if (targetPos.dx < midPos.dx) {
+        // SW
+        newMid = OffsetInt.fromInt(midPos.dxInt - mid, midPos.dyInt + mid);
+        return createOrGetHashed(node.nw!, node.ne!, _setCellState(node.sw!, state, targetPos, newMid), node.se!);
+      } else {
+        // SE
+        newMid = OffsetInt.fromInt(midPos.dxInt + mid, midPos.dyInt + mid);
+        return createOrGetHashed(node.nw!, node.ne!, node.sw!, _setCellState(node.se!, state, targetPos, newMid));
+      }
+    }
+  }
+
+  int get universePopulation => _rootNode.population;
+  Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);
+  Map<Node, Node> get memoizedResults => Map.from(_memoizedResults);
 }
