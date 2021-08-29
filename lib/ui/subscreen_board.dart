@@ -79,6 +79,7 @@ class CheckboxSuperSpeed extends StatelessWidget {
         title: const Text("Toggle Super Speed"),
         value: model.isSuperSpeed,
         onChanged: (value) => model.toggleSuperSpeed = value!,
+        controlAffinity: ListTileControlAffinity.leading,
       ),
     );
   }
@@ -343,7 +344,7 @@ class _WGridPainter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: true);
+    final ModelBoard model = Provider.of(context, listen: false);
     return RepaintBoundary(
       child: Selector<ModelBoard, int>(
         builder: (context, universeLength, child) => CustomPaint(
@@ -362,19 +363,28 @@ class _WGridPainter extends StatelessWidget {
 class GridPainter extends CustomPainter {
   final int universeLength;
 
-  const GridPainter({required this.universeLength});
+  GridPainter({required this.universeLength});
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var eachCol = 0; eachCol < universeLength; eachCol++) {
-      for (var eachRow = 0; eachRow < universeLength; eachRow++) {
-        canvas.drawRect(
-          getRect(eachCol, eachRow),
-          Paint()
-            ..strokeWidth = 1
-            ..style = PaintingStyle.stroke,
-        );
+    if (universeLength < (1 << 6)) {
+      for (var eachCol = 0; eachCol < universeLength; eachCol++) {
+        for (var eachRow = 0; eachRow < universeLength; eachRow++) {
+          canvas.drawRect(
+            getRect(eachCol, eachRow),
+            Paint()
+              ..strokeWidth = 1
+              ..style = PaintingStyle.stroke,
+          );
+        }
       }
+    } else {
+      canvas.drawRect(
+        Rect.fromPoints(Offset.zero, OffsetInt.fromInt(universeLength * SQUARE_LENGTH.toInt(), universeLength * SQUARE_LENGTH.toInt())),
+        Paint()
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke,
+      );
     }
   }
 

@@ -139,6 +139,7 @@ class ModelBoard extends ChangeNotifier {
     if (newExponent < 3 || newExponent > 9) return;
     if (newExponent != _hashlifeUniverse.universeExponent) {
       _hashlifeUniverse.setUniverseSizeExponent(newExponent);
+
       notifyListeners();
     }
   }
