@@ -9,9 +9,6 @@ import 'package:conway_game_of_life/core/saved_blocks.dart';
 import 'package:flutter/material.dart';
 
 class ModelBoard extends ChangeNotifier {
-  late int _numOfColumns;
-  late int _numOfRows;
-  int _universeSizeExponent = 6;
   Timer? _timer;
   int _speedMultiplier = 0;
 
@@ -27,13 +24,11 @@ class ModelBoard extends ChangeNotifier {
   @Deprecated("I should pass it as argument to the function insertion.")
   Offset _mousePosInBoard = Offset.zero;
 
-  ModelBoard({bool randomly = true}) {
-    _hashlifeUniverse = HashlifeUniverse(_universeSizeExponent, randomize: randomly);
-
-    _numOfColumns = 1 << (_universeSizeExponent);
-    _numOfRows = _numOfColumns;
+  ModelBoard({bool randomly = false}) {
+    _hashlifeUniverse = HashlifeUniverse(randomize: randomly);
   }
 
+  void initBoard({bool randomly = false}) => _hashlifeUniverse.initUniverse(randomize: randomly);
   void testHL() {
     final node = _hashlifeUniverse.addBorder(Node.fromQuads(
       Node.CANONICAL_NODES[0],
@@ -53,8 +48,6 @@ class ModelBoard extends ChangeNotifier {
     });
   }
 
-  void initBoard({bool randomly = false}) => _hashlifeUniverse.initUniverse(randomize: randomly);
-
   void saveState() {
     throw "Unimplemented";
 
@@ -71,6 +64,7 @@ class ModelBoard extends ChangeNotifier {
     _hashlifeUniverse.insertBlock(_insertedBlock.matrixBlock, _mousePosInBoard);
 
     queueHashlifeCells = _hashlifeUniverse.plotRootNode();
+
     notifyListeners();
   }
 
@@ -85,7 +79,8 @@ class ModelBoard extends ChangeNotifier {
     play();
   }
 
-  bool _isWithinBoard(Offset pos) => pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _numOfColumns || pos.dyInt >= _numOfRows;
+  bool _isWithinBoard(Offset pos) =>
+      pos.dxInt < 0 || pos.dyInt < 0 || pos.dxInt >= _hashlifeUniverse.universeLength || pos.dyInt >= _hashlifeUniverse.universeLength;
 
   void saveBlock() {
     throw "Unimplemented";
@@ -106,12 +101,13 @@ class ModelBoard extends ChangeNotifier {
    *********************/
 
   int get speedMultiplier => _speedMultiplier;
-  int get numOfColumns => _numOfColumns;
-  int get numOfRows => _numOfRows;
   bool get isModKeyPressed => _isModKeyPressed;
 
   bool get isModeInsertBlock => _isModeInsertBlock;
+  bool get isSuperSpeed => _hashlifeUniverse.isSuperSpeed;
   Block get insertedBlock => _insertedBlock;
+  int get universeLength => _hashlifeUniverse.universeLength;
+  int get universeExponent => _hashlifeUniverse.universeExponent;
   Offset get mousePosInBoard => _mousePosInBoard;
 
   List<int> get stats => _hashlifeUniverse.stats;
@@ -131,11 +127,18 @@ class ModelBoard extends ChangeNotifier {
     }
   }
 
-  void setBoardSize(int cols, int rows) {
-    if (cols != _numOfColumns || rows != _numOfRows) {
-      _numOfColumns = cols;
-      _numOfRows = rows;
+  set toggleSuperSpeed(bool newValue) {
+    if (newValue != _hashlifeUniverse.isSuperSpeed) {
+      _hashlifeUniverse.isSuperSpeed = newValue;
+      print(_hashlifeUniverse.isSuperSpeed);
+      notifyListeners();
+    }
+  }
 
+  void setUniverseSizeExponent(int newExponent) {
+    if (newExponent < 3 || newExponent > 9) return;
+    if (newExponent != _hashlifeUniverse.universeExponent) {
+      _hashlifeUniverse.setUniverseSizeExponent(newExponent);
       notifyListeners();
     }
   }

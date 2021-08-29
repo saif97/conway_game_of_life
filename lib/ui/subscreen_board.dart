@@ -7,7 +7,6 @@ import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
 
 const double SQUARE_LENGTH = 15;
 
@@ -57,10 +56,29 @@ class _Settings extends StatelessWidget {
             label: '${model.speedMultiplier}X',
           ),
           const SetBoardSize(),
-          TextButton(onPressed: model.saveBlock, child: const Text("Save Block")),
+          // TextButton(onPressed: model.saveBlock, child: const Text("Save Block")),
+          Container(width: 20),
+          const CheckboxSuperSpeed(),
           Container(width: 20),
           const _Stats(),
         ],
+      ),
+    );
+  }
+}
+
+class CheckboxSuperSpeed extends StatelessWidget {
+  const CheckboxSuperSpeed({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final ModelBoard model = Provider.of(context, listen: true);
+    return SizedBox(
+      width: 150,
+      child: CheckboxListTile(
+        title: const Text("Toggle Super Speed"),
+        value: model.isSuperSpeed,
+        onChanged: (value) => model.toggleSuperSpeed = value!,
       ),
     );
   }
@@ -84,66 +102,33 @@ class _Stats extends StatelessWidget {
   }
 }
 
-class SetBoardSize extends StatefulWidget {
+class SetBoardSize extends StatelessWidget {
   const SetBoardSize({Key? key}) : super(key: key);
 
   @override
-  _SetBoardSizeState createState() => _SetBoardSizeState();
-}
-
-class _SetBoardSizeState extends State<SetBoardSize> {
-  final contrNumOfCols = TextEditingController();
-  final contrNumOfRows = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: false);
+    final ModelBoard model = Provider.of(context, listen: true);
 
-    if (contrNumOfCols.text.isEmpty) contrNumOfCols.text = model.numOfColumns.toString();
-    if (contrNumOfRows.text.isEmpty) contrNumOfRows.text = model.numOfRows.toString();
-
-    return Row(
+    return Column(
       children: [
-        getTextField(contrNumOfCols, 'Columns'),
-        Container(width: 15),
-        getTextField(contrNumOfRows, "Rows"),
-        Container(width: 15),
-        TextButton(
-          onPressed: () => model.setBoardSize(int.parse(contrNumOfCols.text), int.parse(contrNumOfRows.text)),
-          child: const Text('Set'),
-        )
+        Row(
+          children: [
+            OutlinedButton(
+              onPressed: () => model.setUniverseSizeExponent(model.universeExponent - 1),
+              child: const Text('-'),
+            ),
+            Container(width: 15),
+            Text(model.universeExponent.toString()),
+            Container(width: 15),
+            OutlinedButton(
+              onPressed: () => model.setUniverseSizeExponent(model.universeExponent + 1),
+              child: const Text('+'),
+            ),
+          ],
+        ),
+        Text("${model.universeLength} x ${model.universeLength}"),
       ],
     );
-  }
-
-  Widget getTextField(TextEditingController cont, String label) {
-    return SizedBox(
-      width: 60,
-      child: TextFormField(
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        validator: (value) {
-          // in the case that value is not an int
-          return int.tryParse(value ?? '') != null ? null : value;
-        },
-        decoration: InputDecoration(labelText: label, labelStyle: Theme.of(context).textTheme.caption),
-        maxLength: 6,
-        keyboardType: TextInputType.number,
-        controller: cont,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    contrNumOfCols.dispose();
-    contrNumOfRows.dispose();
-    super.dispose();
   }
 }
 
@@ -273,7 +258,7 @@ class _WCellsPrinter extends StatelessWidget {
         shouldRebuild: (previous, next) => true,
         builder: (context, value, child) {
           return CustomPaint(
-            size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+            size: Size(model.universeLength * SQUARE_LENGTH, model.universeLength * SQUARE_LENGTH),
             painter: CellsPainter(value),
             isComplex: true,
             willChange: true,
@@ -315,7 +300,7 @@ class _WInsertedBlockPainter extends StatelessWidget {
       child: Selector<ModelBoard, Offset>(
         selector: (_, model) => model.mousePosInBoard,
         builder: (context, value, child) => CustomPaint(
-          size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+          size: Size(model.universeLength * SQUARE_LENGTH, model.universeLength * SQUARE_LENGTH),
           painter: InsertedBlockPainter(context),
           isComplex: true,
           willChange: true,
@@ -358,15 +343,15 @@ class _WGridPainter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ModelBoard model = Provider.of(context, listen: false);
+    final ModelBoard model = Provider.of(context, listen: true);
     return RepaintBoundary(
-      child: Selector<ModelBoard, Tuple2<int, int>>(
-        builder: (context, tuple, child) => CustomPaint(
-          size: Size(model.numOfColumns * SQUARE_LENGTH, model.numOfRows * SQUARE_LENGTH),
+      child: Selector<ModelBoard, int>(
+        builder: (context, universeLength, child) => CustomPaint(
+          size: Size(model.universeLength * SQUARE_LENGTH, model.universeLength * SQUARE_LENGTH),
           isComplex: true,
-          painter: GridPainter(cols: tuple.item1, rows: tuple.item2),
+          painter: GridPainter(universeLength: universeLength),
         ),
-        selector: (_, model) => Tuple2(model.numOfColumns, model.numOfRows),
+        selector: (_, model) => model.universeLength,
       ),
     );
   }
@@ -375,14 +360,14 @@ class _WGridPainter extends StatelessWidget {
 // todo: selector recreates Custom Paint Object instead of custompainter deciding to do so.
 
 class GridPainter extends CustomPainter {
-  final int cols, rows;
+  final int universeLength;
 
-  const GridPainter({required this.cols, required this.rows});
+  const GridPainter({required this.universeLength});
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var eachCol = 0; eachCol < cols; eachCol++) {
-      for (var eachRow = 0; eachRow < rows; eachRow++) {
+    for (var eachCol = 0; eachCol < universeLength; eachCol++) {
+      for (var eachRow = 0; eachRow < universeLength; eachRow++) {
         canvas.drawRect(
           getRect(eachCol, eachRow),
           Paint()

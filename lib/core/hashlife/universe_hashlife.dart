@@ -1,3 +1,6 @@
+// Greatly inspired by
+// - https://github.com/ngmsoftware's python Implementation https://github.com/ngmsoftware/hashlife/blob/master/hashLife.py
+
 import 'dart:collection';
 import 'dart:math';
 
@@ -20,21 +23,23 @@ class HashlifeUniverse {
   // number of Game of Life rules calls made in a given generation.
   int _GOL_calls = 0;
 
-  // Given a node, we'll lay it out here centered w/ a empty border and apply GoL rules.
-  // Made it as a global var not to Overwhelm the Garbage Collector.
-  // final _auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
-  // on the first Iteration, the result list should be same as working matrix. otherwise GoL will miss when number of Neighbors =2
-  // late List<List<BinaryNode>> _auxMatrixResult;
   int _generation = 0;
-  final int worldDepth;
-  bool _isFastForward = false;
+  int _universeExponent = 5;
+  late int _universeLength;
+
+  bool isSuperSpeed = true;
   final rand = Random();
 
-  late final List<List<Rect>> _rects;
+  late List<List<Rect>> _rects;
 
-  HashlifeUniverse(this.worldDepth, {bool randomize = false}) : assert(worldDepth >= 2) {
-    final worldSize = 1 << (worldDepth);
-    final offsetBy = OffsetInt.fromInt(1 << (worldDepth - 2), 1 << (worldDepth - 2));
+  HashlifeUniverse({bool randomize = false}) {
+    _universeLength = 1 << universeExponent;
+    initUniverse(randomize: randomize);
+  }
+
+  void initUniverse({bool randomize = false}) {
+    assert(_universeExponent >= 3);
+    final worldSize = 1 << _universeExponent;
     _rects = List.generate(
         worldSize,
         (eachRow) => List.generate(
@@ -42,32 +47,23 @@ class HashlifeUniverse {
             (eachCol) => getRect(
                   eachCol,
                   eachRow,
-                  // offsetBy: -offsetBy,
                 )));
-    initUniverse(randomize: randomize);
 
-    assert(worldDepth == _rootNode.depth, "World Depth has to equal to the depth of the root node");
-    assert(_rects.length == (1 << worldDepth), "Length of rects has to equal depth of the world");
-    assert(_rects.length == _rects[0].length, "rects has to be square.");
-  }
-
-  void initUniverse({bool randomize = false}) {
-    _rootNode = getCanonicalOf(worldDepth, randomize: randomize);
+    _rootNode = getCanonicalOf(_universeExponent, randomize: randomize);
     _initialNode = createOrGetHashed(_rootNode.nw!, _rootNode.ne!, _rootNode.sw!, _rootNode.se!);
+
+    assert(_universeExponent == _rootNode.depth, "World Depth has to equal to the depth of the root node");
+    assert(_rects.length == (1 << _universeExponent), "Length of rects has to equal depth of the world");
+    assert(_rects.length == _rects[0].length, "rects has to be square.");
 
     assert(_rootNode == _initialNode);
     assert(_rootNode.hashCode == _initialNode.hashCode);
   }
 
-  void setRootNode(Node node) {
-    assert(node.depth == worldDepth, "root node (${node.depth}) & worldDepth ($worldDepth) has to be the same.");
-    _rootNode = node;
-  }
-
   Queue<Rect> stepOneGeneration() {
     _updateStats();
     _GOL_calls = 0;
-    _rootNode = (calCenter(addBorder(_rootNode)));
+    _rootNode = calCenter(addBorder(_rootNode));
 
     return plotRootNode();
   }
@@ -242,8 +238,8 @@ class HashlifeUniverse {
   Node calCenter(Node node) {
     assert(node.depth > 1);
     // increment generation if we are processing the top most node (whole universe)
-    if (node.depth == worldDepth) {
-      _generation += 2 ^ worldDepth;
+    if (node.depth == _universeExponent) {
+      _generation += 2 ^ _universeExponent;
     }
 
     if (_memoizedResults.containsKey(node)) {
@@ -283,7 +279,7 @@ class HashlifeUniverse {
 
       final Node nw, ne, sw, se;
 
-      if (_isFastForward) {
+      if (isSuperSpeed) {
         nw = calCenter(createOrGetHashed(res11, res12, res21, res22));
         ne = calCenter(createOrGetHashed(res12, res13, res22, res23));
         sw = calCenter(createOrGetHashed(res21, res22, res31, res32));
@@ -354,49 +350,10 @@ class HashlifeUniverse {
     for (var eachRow = 0; eachRow < block.length; eachRow++) {
       for (var eachCol = 0; eachCol < block[eachRow].length; eachCol++) {
         final eachBlockCellState = block[eachRow][eachCol];
-        final posInUniverse = OffsetInt.fromInt(eachCol, eachRow) + mousePosInBoard;
+        final posInUniverse = OffsetInt.fromInt(eachRow, eachCol) + mousePosInBoard;
 
         _rootNode = _setCellState(_rootNode, eachBlockCellState, posInUniverse, midPos);
         // _setBit(posInUniverse.dxInt, posInUniverse.dyInt, _rootNode, eachBlockCellState);
-      }
-    }
-  }
-
-  /**
-    * Set a bit in this node in its relative coordinate system; returns a whole new
-    * node since our nodes are immutable.
-    *
-    * In the recursive call, we simply adjust the coordinate system and call down a
-    * level.
-    */
-  @Deprecated("")
-  Node _setBit(int x, int y, Node node, bool state) {
-    assert(x > 0);
-
-    // the binary node we're looking for
-    if (node.depth == 0)
-      return state ? BinaryNode.ON : BinaryNode.OFF;
-    else {
-      late final int offset;
-      // in the case when depth = 1, set the offset to 1 otherwise bit shift by -1 which is invalid.
-      if (node.depth == 1)
-        offset = 1;
-      // distance from center of this node to center of subnode is
-      // one fourth the size of this node.
-      else
-        offset = 1 << (node.depth - 2);
-
-      // if left
-      if (x < 0) {
-        if (y < 0)
-          return createOrGetHashed(_setBit(x + offset, y + offset, node.nw!, state), node.ne!, node.sw!, node.se!);
-        else
-          return createOrGetHashed(node.nw!, node.ne!, _setBit(x + offset, y - offset, node.sw!, state), node.se!);
-      } else {
-        if (y < 0)
-          return createOrGetHashed(node.nw!, _setBit(x - offset, y + offset, node.ne!, state), node.sw!, node.se!);
-        else
-          return createOrGetHashed(node.nw!, node.ne!, node.sw!, _setBit(x - offset, y - offset, node.se!, state));
       }
     }
   }
@@ -448,6 +405,21 @@ class HashlifeUniverse {
   }
 
   int get universePopulation => _rootNode.population;
+  int get universeExponent => _universeExponent;
+  int get universeLength => 1 << universeExponent;
   Map<Node, Node> get memoizedNodes => Map.from(_memoizedNodes);
   Map<Node, Node> get memoizedResults => Map.from(_memoizedResults);
+
+  void setRootNode(Node node) {
+    assert(node.depth == _universeExponent, "root node (${node.depth}) & worldDepth ($_universeExponent) has to be the same.");
+    _rootNode = node;
+  }
+
+  void setUniverseSizeExponent(int newExponent) {
+    assert(newExponent >= 3);
+    if (newExponent != _universeExponent) {
+      _universeExponent = newExponent;
+      initUniverse();
+    }
+  }
 }

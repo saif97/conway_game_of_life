@@ -285,7 +285,7 @@ void main() {
   group("Test plotNode", () {
     test("Test Plotting a canonical node", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
-      final offsetBy = Offset(pow(2, universe.worldDepth - 2).toDouble(), pow(2, universe.worldDepth - 2).toDouble());
+      final offsetBy = Offset(pow(2, universe._universeExponent - 2).toDouble(), pow(2, universe._universeExponent - 2).toDouble());
 
       final node = Node.CANONICAL_NODES[1];
       final q = universe.plotNode(node, OffsetInt.fromInt(0, 0), Queue());
@@ -297,7 +297,7 @@ void main() {
     });
     test("Test Plotting a 4X4  node", () {
       final HashlifeUniverse universe = HashlifeUniverse(2);
-      final offsetBy = Offset(pow(2, universe.worldDepth - 2).toDouble(), pow(2, universe.worldDepth - 2).toDouble());
+      final offsetBy = Offset(pow(2, universe._universeExponent - 2).toDouble(), pow(2, universe._universeExponent - 2).toDouble());
 
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[4],
