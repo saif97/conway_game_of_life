@@ -22,7 +22,7 @@ class ModelBoard extends ChangeNotifier {
   bool _isModKeyPressed = false;
   bool _isModeInsertBlock = false;
   @Deprecated("I should pass it as argument to the function insertion.")
-  Offset _mousePosInBoard = Offset.zero;
+    Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = false}) {
     _hashlifeUniverse = HashlifeUniverse(randomize: randomly);

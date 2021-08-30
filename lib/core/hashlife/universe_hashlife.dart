@@ -24,7 +24,7 @@ class HashlifeUniverse {
   int _GOL_calls = 0;
 
   int _generation = 0;
-  int _universeExponent = 5;
+  int _universeExponent;
   late int _universeLength;
 
   bool isSuperSpeed = true;
@@ -32,13 +32,13 @@ class HashlifeUniverse {
 
   late List<List<Rect>> _rects;
 
-  HashlifeUniverse({bool randomize = false}) {
+  HashlifeUniverse({int universeExponent = 5, bool randomize = false}) : _universeExponent = universeExponent {
     _universeLength = 1 << universeExponent;
     initUniverse(randomize: randomize);
   }
 
   void initUniverse({bool randomize = false}) {
-    assert(_universeExponent >= 3);
+    assert(_universeExponent >= 2);
     final worldSize = 1 << _universeExponent;
     _rects = List.generate(
         worldSize,

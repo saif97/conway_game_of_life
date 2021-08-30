@@ -10,9 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group("Test Instantiating universe", () {
     test("test Init function", () {
-      final HashlifeUniverse universe = HashlifeUniverse(3);
-      expect(universe.universePopulation , 0);
-
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 3);
+      expect(universe.universePopulation, 0);
     });
   });
 
@@ -32,7 +31,7 @@ void main() {
       expect(node2.population, 12);
     });
     test("Given a node of depth 1 test if it returns the canonical node pre-defined", () {
-      HashlifeUniverse universe = HashlifeUniverse(2);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 3);
 
       final node = universe.getCanonical(BinaryNode.ON, BinaryNode.OFF, BinaryNode.ON, BinaryNode.ON);
       expect(node, Node.CANONICAL_NODES[11]);
@@ -45,7 +44,7 @@ void main() {
     });
 
     test("Test adding boarder", () {
-      HashlifeUniverse universe = HashlifeUniverse(2);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = Node.FromInt(1, 0, 1, 0);
       final match = Node.fromQuads(
         Node.CANONICAL_NODES[1],
@@ -62,7 +61,7 @@ void main() {
 
   group("Test create or hash", () {
     test("given a canonical node, test if it returns a canonical node w/o caching it.", () {
-      HashlifeUniverse universe = HashlifeUniverse(2);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = universe.createOrGetHashed(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
 
       expect(node, Node.CANONICAL_NODES[4]);
@@ -75,7 +74,7 @@ void main() {
     });
 
     test("given a non-canonical node check if it's cached", () {
-      HashlifeUniverse universe = HashlifeUniverse(2);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       // 8x8 node
       final node = universe.createOrGetHashed(
         Node.FromInt(0, 0, 0, 1),
@@ -88,7 +87,7 @@ void main() {
     });
 
     test("given a empty universe, check if it's properly cached", () {
-      HashlifeUniverse universe = HashlifeUniverse(3);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 3);
       final node = Node.CANONICAL_NODES[0];
       final bordered8x8 = universe.addBorder(
         universe.addBorder(node),
@@ -99,7 +98,7 @@ void main() {
     });
 
     test("given a node with a > 16X16 , check if it's properly cached", () {
-      HashlifeUniverse universe = HashlifeUniverse(5);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 5);
       // node size 16x16
       final node = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
       expect(universe.memoizedNodes.length, 8);
@@ -126,7 +125,7 @@ void main() {
   });
 
   test("Test get centered", () {
-    HashlifeUniverse universe = HashlifeUniverse(2);
+    HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
     final match = Node.CANONICAL_NODES[15];
 
     final actual = universe.getCenterNode(universe.addBorder(match));
@@ -136,7 +135,7 @@ void main() {
 
   group("test Node to Aux", () {
     test("Test Node to Auxiliary", () {
-      HashlifeUniverse universe = HashlifeUniverse(2);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
       final aux = universe.getAuxFromNode(node4x4);
 
@@ -154,7 +153,7 @@ void main() {
     });
 
     test("Test Node to Auxiliary I shape", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[3],
         Node.CANONICAL_NODES[2],
@@ -174,7 +173,7 @@ void main() {
   });
 
   test("Test auxResultToNode", () {
-    final HashlifeUniverse universe = HashlifeUniverse(2);
+    final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
     final node4x4 = universe.addBorder(Node.CANONICAL_NODES[3]);
     final aux = universe.getAuxFromNode(node4x4);
     final auxResult = universe.applyGoLRulesToAux(aux);
@@ -186,7 +185,7 @@ void main() {
   // rules are standard no need to test them thoroughly.
   group("Test GoL rules.", () {
     test("test full 4X4 node", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node4x4 = universe.addBorder(Node.CANONICAL_NODES[15]);
       final aux = universe.getAuxFromNode(node4x4);
       final auxResult = universe.applyGoLRulesToAux(aux);
@@ -196,7 +195,7 @@ void main() {
     });
 
     test("Test < shape", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node4x4 = universe.addBorder(Node.CANONICAL_NODES[14]);
       final aux = universe.getAuxFromNode(node4x4);
       final auxResult = universe.applyGoLRulesToAux(aux);
@@ -208,7 +207,7 @@ void main() {
 
   group("Test calResult function", () {
     test("Test 4 quads goes to empty.", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[2],
         Node.CANONICAL_NODES[2],
@@ -221,7 +220,7 @@ void main() {
     });
 
     test("Test on 4X4 full block", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = universe.addBorder(Node.CANONICAL_NODES[15]);
       final out = universe.calCenter(node);
 
@@ -229,7 +228,7 @@ void main() {
     });
 
     test("Test that an empty universe of depth 3 should only have memResult of size 7.", () {
-      final HashlifeUniverse universe = HashlifeUniverse(3);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 3);
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[0],
         Node.CANONICAL_NODES[0],
@@ -244,7 +243,7 @@ void main() {
     });
 
     test("Test < shape", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = universe.addBorder(Node.CANONICAL_NODES[14]);
       final out = universe.calCenter(node);
 
@@ -252,7 +251,7 @@ void main() {
     });
 
     test("Test 4X4 full block on a universe of depth 3", () {
-      final HashlifeUniverse universe = HashlifeUniverse(3);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 3);
       final node = universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[15]));
 
       final result = universe.calCenter(node);
@@ -261,7 +260,7 @@ void main() {
     });
 
     test("Test that we fun. should use a result calculated previously. This is a bug happening on nodes w/ depth 3 and Higher.", () {
-      HashlifeUniverse universe = HashlifeUniverse(5);
+      HashlifeUniverse universe = HashlifeUniverse(universeExponent: 5);
 
       // node size 16x16
       final node = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
@@ -284,8 +283,8 @@ void main() {
 
   group("Test plotNode", () {
     test("Test Plotting a canonical node", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
-      final offsetBy = Offset(pow(2, universe._universeExponent - 2).toDouble(), pow(2, universe._universeExponent - 2).toDouble());
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
+      final offsetBy = Offset(pow(2, universe.universeExponent - 2).toDouble(), pow(2, universe.universeExponent - 2).toDouble());
 
       final node = Node.CANONICAL_NODES[1];
       final q = universe.plotNode(node, OffsetInt.fromInt(0, 0), Queue());
@@ -296,8 +295,8 @@ void main() {
       expect(q2, Queue.from([getRect(0, 0, offsetBy: -offsetBy), getRect(1, 0, offsetBy: -offsetBy), getRect(0, 1, offsetBy: -offsetBy)]));
     });
     test("Test Plotting a 4X4  node", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
-      final offsetBy = Offset(pow(2, universe._universeExponent - 2).toDouble(), pow(2, universe._universeExponent - 2).toDouble());
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
+      final offsetBy = Offset(pow(2, universe.universeExponent - 2).toDouble(), pow(2, universe.universeExponent - 2).toDouble());
 
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[4],
@@ -318,7 +317,7 @@ void main() {
     });
 
     test("Test I shape  on a universe of depth 3", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[3],
         Node.CANONICAL_NODES[2],
@@ -341,7 +340,7 @@ void main() {
 
   group("Test Block Insertion", () {
     test("Test Inserting full 2x2 block into an empty universe", () {
-      final HashlifeUniverse universe = HashlifeUniverse(2);
+      final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
 
       const block = [
         [true, true],

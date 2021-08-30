@@ -14,7 +14,10 @@ https://www.dev-mind.blog/hashlife/
 
 ## todo:
 
-- [ ] 
+- [ ] add more blocks.
+- [ ] Performance Optimization.
+
+![alt text](ui.png)
 
 ![alt text](puffer_train.gif)
 
