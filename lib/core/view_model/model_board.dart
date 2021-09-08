@@ -22,7 +22,7 @@ class ModelBoard extends ChangeNotifier {
   bool _isModKeyPressed = false;
   bool _isModeInsertBlock = false;
   @Deprecated("I should pass it as argument to the function insertion.")
-    Offset _mousePosInBoard = Offset.zero;
+  Offset _mousePosInBoard = Offset.zero;
 
   ModelBoard({bool randomly = false}) {
     _hashlifeUniverse = HashlifeUniverse(randomize: randomly);
@@ -42,8 +42,8 @@ class ModelBoard extends ChangeNotifier {
   void play() {
     _timer?.cancel();
     final updateRate = 50 + (speedMultiplier * 10);
-    _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) {
-      queueHashlifeCells = _hashlifeUniverse.stepOneGeneration();
+    _timer = Timer.periodic(Duration(milliseconds: updateRate), (timer) async {
+      queueHashlifeCells = await _hashlifeUniverse.stepOneGeneration();
       notifyListeners();
     });
   }

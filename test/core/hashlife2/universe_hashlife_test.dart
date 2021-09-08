@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
 import 'package:conway_game_of_life/core/hashlife/node.dart';
@@ -55,7 +54,8 @@ void main() {
       final bordered = universe.addBorder(node);
       expect(bordered, match);
 
-      expect(universe.memoizedNodes.length, 4, reason: "3 Canonical, 1 Duplicate (discarded) and 1 the 8x8 cell");
+      expect(universe.memoizedNodes.length, 5,
+          reason: "3 Canonical, 1 Duplicate (discarded) and 1 the 8x8 cell empty on creation, and one 8x8 of pop 2.");
     });
   });
 
@@ -67,10 +67,10 @@ void main() {
       expect(node, Node.CANONICAL_NODES[4]);
 
       // check if the node is cached since it's canonicals aren't in the hash by Default.
-      expect(universe.memoizedNodes.length, 1);
+      expect(universe.memoizedNodes.length, 2, reason: "1 hashed empty on creation and another created above.");
 
       universe.createOrGetHashed(BinaryNode.OFF, BinaryNode.ON, BinaryNode.OFF, BinaryNode.OFF);
-      expect(universe.memoizedNodes.length, 1, reason: "The function should return the same node since it's cached.");
+      expect(universe.memoizedNodes.length, 2, reason: "The function should return the same node since it's cached.");
     });
 
     test("given a non-canonical node check if it's cached", () {
@@ -83,7 +83,7 @@ void main() {
         Node.FromInt(0, 0, 0, 0),
       );
 
-      expect(universe.memoizedNodes.length, 1);
+      expect(universe.memoizedNodes.length, 2, reason: "one created on universe Initialization and another above.");
     });
 
     test("given a empty universe, check if it's properly cached", () {
@@ -99,28 +99,31 @@ void main() {
 
     test("given a node with a > 16X16 , check if it's properly cached", () {
       HashlifeUniverse universe = HashlifeUniverse(universeExponent: 5);
-      // node size 16x16
+      // node size 16x16 depth= 4
       final node = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
-      expect(universe.memoizedNodes.length, 8);
+
+      expect(node.depth, 4);
+      expect(universe.memoizedNodes.length, 5, reason: "hash should be universe +1");
 
       // create a node of size 32x32
       final hashedNode = universe.createOrGetHashed(node, node, node, node);
-      expect(universe.memoizedNodes.length, 9);
+      expect(hashedNode.depth, 5);
+      expect(universe.memoizedNodes.length, 5, reason: "a new cache shouldn't be created because it's same as the universe.");
 
       universe.createOrGetHashed(node, node, node, node);
-      expect(universe.memoizedNodes.length, 9, reason: "Same subnodes should return the same node w/o hashing");
+      expect(universe.memoizedNodes.length, 5, reason: "Same subnodes should return the same node w/o hashing");
 
       final node2 = universe.addBorder(universe.addBorder(universe.addBorder(Node.CANONICAL_NODES[0])));
-      expect(universe.memoizedNodes.length, 9, reason: "Same subnodes should return the same node w/o hashing");
+      expect(universe.memoizedNodes.length, 5, reason: "Same subnodes should return the same node w/o hashing");
 
       // create a node of size 32x32
       universe.createOrGetHashed(node2, node2, node2, node2);
-      expect(universe.memoizedNodes.length, 9);
+      expect(universe.memoizedNodes.length, 5);
 
       final node3 = universe.addBorder(universe.addBorder(universe.addBorder(Node.FromInt(0, 0, 0, 0))));
 
       universe.createOrGetHashed(node3, node3, node3, node3);
-      expect(universe.memoizedNodes.length, 9);
+      expect(universe.memoizedNodes.length, 5);
     });
   });
 
@@ -284,19 +287,17 @@ void main() {
   group("Test plotNode", () {
     test("Test Plotting a canonical node", () {
       final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
-      final offsetBy = Offset(pow(2, universe.universeExponent - 2).toDouble(), pow(2, universe.universeExponent - 2).toDouble());
 
       final node = Node.CANONICAL_NODES[1];
       final q = universe.plotNode(node, OffsetInt.fromInt(0, 0), Queue());
-      expect(q, Queue.from([getRect(1, 1, offsetBy: -offsetBy)]));
+      expect(q, Queue.from([getRect(1, 1)]));
 
       final node2 = Node.CANONICAL_NODES[14];
       final q2 = universe.plotNode(node2, OffsetInt.fromInt(0, 0), Queue());
-      expect(q2, Queue.from([getRect(0, 0, offsetBy: -offsetBy), getRect(1, 0, offsetBy: -offsetBy), getRect(0, 1, offsetBy: -offsetBy)]));
+      expect(q2, Queue.from([getRect(0, 0), getRect(1, 0), getRect(0, 1)]));
     });
     test("Test Plotting a 4X4  node", () {
       final HashlifeUniverse universe = HashlifeUniverse(universeExponent: 2);
-      final offsetBy = Offset(pow(2, universe.universeExponent - 2).toDouble(), pow(2, universe.universeExponent - 2).toDouble());
 
       final node = Node.fromQuads(
         Node.CANONICAL_NODES[4],
@@ -306,14 +307,7 @@ void main() {
       );
       final q = universe.plotNode(node, OffsetInt.fromInt(0, 0), Queue());
 
-      expect(
-          q,
-          Queue.from([
-            getRect(1, 0, offsetBy: -offsetBy),
-            getRect(3, 0, offsetBy: -offsetBy),
-            getRect(1, 2, offsetBy: -offsetBy),
-            getRect(3, 2, offsetBy: -offsetBy)
-          ]));
+      expect(q, Queue.from([getRect(1, 0), getRect(3, 0), getRect(1, 2), getRect(3, 2)]));
     });
 
     test("Test I shape  on a universe of depth 3", () {

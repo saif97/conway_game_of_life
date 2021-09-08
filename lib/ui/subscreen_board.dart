@@ -144,7 +144,7 @@ class _Instructions extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: const <Widget>[
-            Text('click to pan. Ctrl/Cmd click or hold to draw or release block. | Only block of size 10 X 10 can be saved. | Esc to cancel.'),
+            Text('Click to pan | Esc to exit block insertion mode.'),
           ],
         ),
       ),
@@ -170,7 +170,7 @@ class _KeyboardGestureControllers extends StatelessWidget {
         focusNode: FocusNode(),
         autofocus: true,
         onKey: (RawKeyEvent event) {
-          model.isModKeyPressed = event.isControlPressed;
+          model.isModKeyPressed = event.isAltPressed;
           if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
             model.disableBlockInsertionMode();
           }

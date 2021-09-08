@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:conway_game_of_life/core/dart_extensions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../utils.dart';
@@ -60,10 +61,10 @@ class HashlifeUniverse {
     assert(_rootNode.hashCode == _initialNode.hashCode);
   }
 
-  Queue<Rect> stepOneGeneration() {
+  Future<Queue<Rect>> stepOneGeneration() async {
     _updateStats();
     _GOL_calls = 0;
-    _rootNode = calCenter(addBorder(_rootNode));
+    _rootNode = await compute((v) => calCenter(addBorder(_rootNode)), "");
 
     return plotRootNode();
   }
