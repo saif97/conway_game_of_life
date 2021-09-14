@@ -19,6 +19,10 @@ class HashlifeUniverse {
   // hash nodes so I point to them when a node with similar quads is created.
   final Map<Node, Node> _memoizedNodes = {};
 
+  // made it public to optimize performance.
+  final List<List<BinaryNode>> auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
+  final List<List<BinaryNode>> auxMatrixResult = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
+
   List<int> stats = List.filled(4, 0);
 
   // number of Game of Life rules calls made in a given generation.
@@ -64,7 +68,7 @@ class HashlifeUniverse {
   Future<Queue<Rect>> stepOneGeneration() async {
     _updateStats();
     _GOL_calls = 0;
-    _rootNode = await compute((v) => calCenter(addBorder(_rootNode)), "");
+    _rootNode = calCenter(addBorder(_rootNode));
 
     return plotRootNode();
   }
@@ -138,7 +142,7 @@ class HashlifeUniverse {
 
   List<List<BinaryNode>> applyGoLRulesToAux(List<List<BinaryNode>> auxMatrix) {
     _GOL_calls++;
-    final matrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => auxMatrix[eachRow][eachCol]));
+    // final matrixResult = List.generate(6, (eachRow) => List.generate(6, (eachCol) => auxMatrix[eachRow][eachCol]));
     for (var eachRow = 1; eachRow < 5; eachRow++) {
       for (var eachCol = 1; eachCol < 5; eachCol++) {
         // those are the 8 nodes Surrounding (eachRow,eachCol)
@@ -166,21 +170,22 @@ class HashlifeUniverse {
 
         // if under populated or over populated kill the cell.
         if (numAliveNeighbors < 2 || numAliveNeighbors > 3) {
-          matrixResult[eachRow][eachCol] = BinaryNode.OFF;
+          auxMatrixResult[eachRow][eachCol] = BinaryNode.OFF;
         } else {
           if (numAliveNeighbors == 3) {
-            matrixResult[eachRow][eachCol] = BinaryNode.ON;
+            auxMatrixResult[eachRow][eachCol] = BinaryNode.ON;
+          } else {
+            auxMatrixResult[eachRow][eachCol] = auxMatrix[eachRow][eachCol];
           }
         }
       }
     }
-    return matrixResult;
+    return auxMatrixResult;
   }
 
   // since the list is of size 6X6 we'll have border of size 1 of type BinaryNode.OFF around the node
   List<List<BinaryNode>> getAuxFromNode(Node node) {
     assert(node.depth == 2, "Only works on node of depth 2^2 (4x4 grid) ");
-    final auxMatrix = List.generate(6, (_) => List.generate(6, (_) => BinaryNode.OFF));
 
     auxMatrix[1][1] = (node.nw!.nw)! as BinaryNode;
     auxMatrix[1][2] = (node.nw!.ne)! as BinaryNode;

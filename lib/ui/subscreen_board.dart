@@ -60,7 +60,7 @@ class _Settings extends StatelessWidget {
           Container(width: 20),
           const CheckboxSuperSpeed(),
           Container(width: 20),
-          const _Stats(),
+          // const _Stats(),
         ],
       ),
     );
