@@ -1,0 +1,32 @@
+name: Flutter
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test tool
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter test --platform chrome test/core/hashlife_test.dart
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+      - run: dart compile js -O4 tool/verify_web_engine.dart -o /tmp/life-engine.js
+      - run: node /tmp/life-engine.js
+      - run: dart compile wasm tool/verify_web_engine.dart -o /tmp/life-engine.wasm
+      - run: node tool/run_wasm.mjs /tmp/life-engine.wasm
+      - run: bash tool/build_web.sh
+      - run: node tool/test_workers.mjs
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: web-release
+          path: build/web

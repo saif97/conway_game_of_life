@@ -1,30 +1,76 @@
-# Flutter Conway Game of Life (Hashlife)
+# Conway’s Game of Life
 
-Desmos Like Conway Game of Life built on Flutter.
+Flutter web simulator with an expanding HashLife universe, exact single steps,
+power-of-two generation jumps, pattern placement, and pan/zoom.
 
-Tested on only Macos & Web chrome.
+## Run
 
-Link to the web app hosted on firebase:
-https://conway-game-of-life-598e1.firebaseapp.com/#/
+Use **Flutter 3.47.9 stable / Dart 3.13.7** (`.fvmrc` pins the SDK for FVM).
 
-## Credits:
+```sh
+flutter pub get
+bash tool/build_workers.sh
+flutter run -d chrome --wasm
+```
 
-- Hashlife dart Implantation is greatly inspired by ngmsoftware [Implementation](https://github.com/ngmsoftware/hashlife/blob/master/hashLife.py) and [tutorial](https://www.dev-mind.blog/hashlife/).
+Turn on Draw to toggle cells, drag to pan, and scroll/pinch to zoom. Search the
+pattern library (drawer on narrow screens): click a card to load a new world, or
+choose Place in world to insert it into the current world. Escape cancels placement. Step always advances one generation; the generations/tick
+control changes playback jumps (up to 1,048,576 generations). Jump applies one
+selected jump while paused. Random seed area controls the initial random
+square, not a fixed boundary. Save/Restore keeps a snapshot in memory.
 
-## Resources on how Hashlife work
+Simulation and viewport extraction run in a dedicated web worker. Pause lets the
+current jump finish; New world terminates it immediately. Pan/zoom and controls
+remain available during computation. Rebuild worker assets after engine changes;
+Flutter hot reload does not rebuild them.
 
-https://www.dev-mind.blog/hashlife/
+The side panel shows rendered Flutter FPS and memory in MiB (also available in
+the mobile drawer). FPS drops when idle. Memory uses the browser’s page-and-worker
+estimate when available, otherwise a clearly labeled partial JS heap estimate or
+“Unavailable”; it is not total process RAM. Hover the metrics for details.
 
-## todo:
+## Verify and build
 
-- [ ] add more blocks.
-- [ ] Performance Optimization.
+```sh
+dart format --output=none --set-exit-if-changed lib test tool
+flutter analyze
+flutter test
+flutter test --platform chrome test/core/hashlife_test.dart
+bash tool/build_web.sh
+node tool/test_workers.mjs
+```
 
-![alt text](ui.png)
+Deploy `build/web/` to your static host. `firebase.json` includes the isolation
+headers for Flutter’s threaded renderer and the Wasm MIME type. The generated
+loader retains JavaScript fallback for browsers that cannot run the Wasm build.
+Deployment is a separate step; building does not publish the application.
 
-![alt text](puffer_train.gif)
+Read [the algorithm, tests, web-build tradeoffs and research sources](docs/architecture.md).
+Run `dart run tool/benchmark.dart` for reproducible engine-only timings. HashLife
+excels at repeating patterns and large jumps; it is not universally fastest for
+chaotic dense boards. Web is the supported target of this modernization; native
+platform scaffolds still need separate migration and validation.
 
-![alt text](gunner.gif)
+## Enable GitHub Actions
+
+The workflow is staged at `tool/flutter.yml` because the publishing credential
+cannot write GitHub Actions workflows. CI remains inactive until it is moved:
+
+```sh
+mkdir -p .github/workflows
+git mv tool/flutter.yml .github/workflows/flutter.yml
+git commit -m "Enable Flutter CI workflow"
+git push
+```
+
+Run these commands on the PR branch with credentials that allow workflow updates.
+
+## Credits
+
+The original implementation was inspired by
+[ngmsoftware’s HashLife](https://github.com/ngmsoftware/hashlife/blob/master/hashLife.py)
+and [this tutorial](https://www.dev-mind.blog/hashlife/).
 
 ## MIT License
 

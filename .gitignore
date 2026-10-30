@@ -32,7 +32,6 @@
 /build/
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
@@ -44,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local Flutter version manager SDK
+.fvm/
+
+# Generated worker binaries; build with tool/build_workers.sh.
+/web/workers/life_worker.js*
+/web/workers/life_worker.mjs
+/web/workers/life_worker.wasm*
+/web/workers/life_worker.support.js
