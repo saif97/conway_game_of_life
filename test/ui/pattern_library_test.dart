@@ -16,6 +16,16 @@ class TestBundle extends CachingAssetBundle {
   final reads = <String>[];
   String? failOnce;
   @override
+  Future<String> loadString(String key, {bool cache = true}) async {
+    // Decode large fixtures without AssetBundle's background isolate, which
+    // does not advance with the widget test's fake clock.
+    final data = await load(key);
+    return utf8.decode(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    );
+  }
+
+  @override
   Future<ByteData> load(String key) async {
     reads.add(key);
     if (failOnce == key) {
@@ -72,7 +82,13 @@ void main() {
     (tester) async {
       final bundle = TestBundle(files);
       final model = await mount(tester, bundle);
-      expect(find.text('37 patterns · 6 families'), findsOneWidget);
+      final manifest = jsonDecode(files['assets/patterns/catalog.json']!);
+      expect(
+        find.text(
+          '${manifest['patterns'].length} patterns · ${manifest['groups'].length} families',
+        ),
+        findsOneWidget,
+      );
       expect(bundle.reads, ['assets/patterns/catalog.json']);
       await tester.tap(find.byKey(const ValueKey('group-still-lifes')));
       await tester.pumpAndSettle();
@@ -125,6 +141,28 @@ void main() {
         tester.getTopLeft(find.text('Beehive')).dy,
         lessThan(tester.getTopLeft(find.text('Block')).dy),
       );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'published meta-world loads with its starting jump and no Place action',
+    (tester) async {
+      final model = await mount(tester, TestBundle(files));
+      await tester.enterText(
+        find.byType(TextField),
+        'metapixel galaxy millions',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('OTCA metapixel galaxy'), findsOneWidget);
+      expect(find.text('Place'), findsNothing);
+      await tester.ensureVisible(find.text('Load world'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Load world'));
+      await tester.pumpAndSettle();
+      expect(model.population, 7408195);
+      expect(model.jumpExponent, 10);
+      expect(model.isPlaying, isFalse);
       expect(tester.takeException(), isNull);
     },
   );

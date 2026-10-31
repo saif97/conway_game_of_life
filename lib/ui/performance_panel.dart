@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
+
+import '../core/view_model/model_board.dart';
 
 import '../core/performance/frame_rate.dart';
 import '../core/performance/memory.dart';
@@ -62,7 +65,7 @@ class _PerformancePanelState extends State<PerformancePanel> {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(20),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: const BoxDecoration(
       color: Color(0xFF171C19),
       border: Border(top: BorderSide(color: Color(0xFF30372F))),
@@ -82,6 +85,25 @@ class _PerformancePanelState extends State<PerformancePanel> {
         Tooltip(
           message: 'Flutter frames rendered per second, not generations per second or display refresh rate. Low values are normal when idle. This panel refreshes once a second.',
           child: _row('Rendered FPS', _fps?.toStringAsFixed(1) ?? '—'),
+        ),
+        const SizedBox(height: 8),
+        Consumer<ModelBoard>(
+          builder: (_, model, _) => Tooltip(
+            message: 'Worker computation time for the last completed simulation jump; excludes rendering and message transfer. FPS can stay high while this is slow.',
+            child: _row(
+              'Simulation / jump',
+              model.simulationUs == null
+                  ? '—'
+                  : '${(model.simulationUs! / 1000).toStringAsFixed(1)} ms',
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Consumer<ModelBoard>(
+          builder: (_, model, _) => _row(
+            'Generations / jump',
+            model.simulatedGenerations?.toString() ?? '—',
+          ),
         ),
         const SizedBox(height: 8),
         Tooltip(

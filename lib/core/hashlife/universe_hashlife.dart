@@ -243,6 +243,14 @@ final class HashlifeUniverse {
     _savedGeneration = generation;
   }
 
+  /// Install an already compressed pattern, preserving shared subtrees.
+  void loadTree(Node root) {
+    _root = root;
+    _x = _y = generation = 0;
+    save();
+    compact();
+  }
+
   void restore() {
     _root = _savedRoot;
     _x = _savedX;

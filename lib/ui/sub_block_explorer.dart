@@ -257,6 +257,9 @@ class _PatternCardState extends State<_PatternCard> {
     if (place) {
       model.enableBlockInsertionMode(block);
     } else {
+      if (widget.entry.jumpExponent != null) {
+        model.jumpExponent = widget.entry.jumpExponent!;
+      }
       model.loadPattern(block);
     }
     if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
@@ -276,6 +279,12 @@ class _PatternCardState extends State<_PatternCard> {
             Text(widget.entry.description),
             const SizedBox(height: 16),
             Text(widget.entry.tip),
+            if (widget.entry.asset.endsWith('.mc')) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Load this complete construction as a new world. The dimensions shown include its surrounding empty space.',
+              ),
+            ],
             const SizedBox(height: 24),
             Text(
               widget.entry.credit,
@@ -394,15 +403,16 @@ class _PatternCardState extends State<_PatternCard> {
                       onPressed: _details,
                       icon: const Icon(Icons.info_outline, size: 16),
                     ),
-                    TextButton(
-                      onPressed: block == null
-                          ? null
-                          : () => _select(block, place: true),
-                      child: const Text(
-                        'Place',
-                        style: TextStyle(fontSize: 11),
+                    if (!widget.entry.asset.endsWith('.mc'))
+                      TextButton(
+                        onPressed: block == null
+                            ? null
+                            : () => _select(block, place: true),
+                        child: const Text(
+                          'Place',
+                          style: TextStyle(fontSize: 11),
+                        ),
                       ),
-                    ),
                     TextButton(
                       onPressed: block == null ? null : () => _select(block),
                       child: const Text(
@@ -425,10 +435,7 @@ class PatternPainter extends CustomPainter {
   PatternPainter(this.block) {
     // Bound painting work by thumbnail resolution, even for very wide circuits.
     final scale = min(50 / block.cols, 44 / block.rows);
-    _pixels = {
-      for (final (x, y) in block.liveCells)
-        ((x * scale).floor(), (y * scale).floor()),
-    };
+    _pixels = block.previewPixels(scale);
   }
   final Block block;
   late final Set<(int, int)> _pixels;

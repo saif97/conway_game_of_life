@@ -33,7 +33,7 @@ class _WorldHeader extends StatelessWidget {
       (ModelBoard m) => (m.title, m.generation, m.population, m.error),
     );
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFF30372F))),
       ),
@@ -42,27 +42,13 @@ class _WorldHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'YOUR UNIVERSE',
-                      style: TextStyle(
-                        fontSize: 9,
-                        letterSpacing: 2,
-                        color: Color(0xFF9BA897),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      title,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               _Metric(
@@ -139,7 +125,7 @@ class _Controls extends StatelessWidget {
     );
     final disabled = busy || hasError;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: const BoxDecoration(
         color: Color(0xFF171C19),
         border: Border(top: BorderSide(color: Color(0xFF30372F))),
@@ -147,19 +133,22 @@ class _Controls extends StatelessWidget {
       child: Column(
         children: [
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 4,
+            runSpacing: 0,
             crossAxisAlignment: WrapCrossAlignment.center,
             alignment: WrapAlignment.center,
             children: [
-              FilledButton.icon(
-                onPressed: hasError
-                    ? null
-                    : (playing ? model.pause : model.play),
-                icon: Icon(
-                  playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              Tooltip(
+                message: 'Play / pause (Space)',
+                child: FilledButton.icon(
+                  onPressed: hasError
+                      ? null
+                      : (playing ? model.pause : model.play),
+                  icon: Icon(
+                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(playing ? 'Pause' : 'Play'),
                 ),
-                label: Text(playing ? 'Pause' : 'Play'),
               ),
               OutlinedButton.icon(
                 onPressed: disabled || playing ? null : model.step,
@@ -212,14 +201,6 @@ class _Controls extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 9),
-          Wrap(
-            spacing: 4,
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
               TextButton.icon(
                 onPressed: model.clear,
                 icon: const Icon(Icons.add_circle_outline, size: 15),

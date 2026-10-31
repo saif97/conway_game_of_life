@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import '../hashlife/universe_hashlife.dart';
+import '../macrocell.dart';
 
 /// Runs exclusively in a worker/isolate in the application. No Flutter imports.
 class WorkerService {
@@ -28,6 +29,8 @@ class WorkerService {
           universe.setCell(cell[0] as int, cell[1] as int, true);
         }
         universe.save();
+      case 'loadMacrocell':
+        universe.loadTree(parseMacrocell(message['source'] as String));
       case 'randomize':
         final exponent = message['exponent'] as int;
         RangeError.checkValueInInterval(exponent, 3, 9);

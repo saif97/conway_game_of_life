@@ -7,6 +7,7 @@ No network is used by the app itself. Review upstream changes before bundling.
 """
 import concurrent.futures
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import re
@@ -57,8 +58,10 @@ def main():
                 else (ROOT / entry['asset']).read_bytes())
         if 'lexiconAnchor' in entry:
             data = lexicon_rle(data.decode(), entry)
-        if not re.search(rb'^x\s*=\s*\d+', data, re.M):
-            raise ValueError(f"Not an RLE pattern: {entry['id']}")
+        if data.startswith(b'\x1f\x8b'):
+            data = gzip.decompress(data)
+        if not (re.search(rb'^x\s*=\s*\d+', data, re.M) or data.startswith(b'[M2]')):
+            raise ValueError(f"Not an RLE or M2 pattern: {entry['id']}")
         entry['sha256'] = hashlib.sha256(data).hexdigest()
         outputs.append((ROOT / entry['asset'], data))
     for path, data in outputs:

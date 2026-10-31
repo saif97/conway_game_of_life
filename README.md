@@ -13,8 +13,9 @@ bash tool/build_workers.sh
 flutter run -d chrome --wasm
 ```
 
+Press **Space** to play/pause (except while typing or using a dialog).
 Turn on Draw to toggle cells, drag to pan, and scroll/pinch to zoom. Search the
-37-pattern library (drawer on narrow screens): expand a family, search across
+42-pattern library (drawer on narrow screens): expand a family, search across
 all families, or sort names A–Z. Click a card or Load world to start a new world,
 or choose Place to insert it into the current world. The info button offers
 experiment tips and source credits. Escape cancels placement. Step always advances one generation; the generations/tick
@@ -27,6 +28,11 @@ current jump finish; New world terminates it immediately. Pan/zoom and controls
 remain available during computation. Rebuild worker assets after engine changes;
 Flutter hot reload does not rebuild them.
 
+The side panel shows the last simulation jump's computation time and generation
+count separately from rendered Flutter FPS. Smooth rendering does not mean the
+simulation is fast: it runs in a worker, and HashLife compresses repetitive
+patterns much better than chaotic random fields.
+
 The side panel shows rendered Flutter FPS and memory in MiB (also available in
 the mobile drawer). FPS drops when idle. Memory uses the browser’s page-and-worker
 estimate when available, otherwise a clearly labeled partial JS heap estimate or
@@ -34,7 +40,11 @@ estimate when available, otherwise a clearly labeled partial JS heap estimate or
 
 Patterns come from Golly and its Life Lexicon, ranging from simple still lifes
 through breeders, memory circuits, and a Turing machine. They are bundled as
-RLE files and load on demand using sparse coordinates. See
+RLE and compressed-tree macrocell files and load on demand. Try **OTCA metapixel
+galaxy** for a complete Life-inside-Life world, or **Demonoid spaceship** for a
+published self-constructing machine. The **Three-digit hexadecimal counter**
+and **Pi calculator** demonstrate working arithmetic and computing circuitry. Large constructions choose an initial jump
+size automatically; press Space to run and zoom in to inspect their circuitry. See
 [the library and adding patterns](docs/pattern-library.md) and
 [third-party pattern credits](assets/patterns/NOTICE.md).
 

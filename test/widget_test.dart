@@ -4,6 +4,7 @@ import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:conway_game_of_life/ui/screen_home.dart';
 import 'package:conway_game_of_life/ui/subscreen_board.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_worker.dart';
@@ -35,6 +36,50 @@ Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
 }
 
 void main() {
+  testWidgets(
+    'Space toggles once, pauses busy work, and respects text and dialogs',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final worker = GatedWorker();
+      final model = await mount(tester, worker: worker);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(model.isPlaying, isTrue);
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.space);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.space);
+      expect(model.isPlaying, isTrue);
+      worker.advanceGate = Completer<void>();
+      await tester.pump(const Duration(milliseconds: 33));
+      expect(model.isBusy, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(model.isPlaying, isFalse);
+      worker.advanceGate!.complete();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField));
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(model.isPlaying, isFalse);
+      await tester.tap(find.text('Guide'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(model.isPlaying, isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(LifeViewport));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(model.isPlaying, isTrue);
+      model.pause();
+    },
+  );
+
   testWidgets('Draw paints a continuous stroke without moving the camera', (
     tester,
   ) async {

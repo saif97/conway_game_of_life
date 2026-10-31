@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import 'models/block.dart';
+import 'macrocell.dart';
 import 'rle_pattern.dart';
 
 class PatternGroup {
@@ -20,8 +21,10 @@ class PatternEntry {
     required this.asset,
     required this.source,
     required this.credit,
+    this.jumpExponent,
   });
   final String id, name, group, description, tip, asset, source, credit;
+  final int? jumpExponent;
 
   bool matches(String query, PatternGroup category) {
     final text = '$name $description $tip ${category.name}'.toLowerCase();
@@ -33,7 +36,7 @@ class PatternEntry {
   }
 }
 
-/// Metadata loads once; RLE bodies are decoded only as their cards are visited.
+/// Metadata loads once; pattern bodies are decoded only as their cards are visited.
 class PatternCatalog {
   PatternCatalog._(this.groups, this.patterns, this._bundle);
   final List<PatternGroup> groups;
@@ -63,6 +66,10 @@ class PatternCatalog {
       if (!ids.add(id) || !groupIds.contains(group)) {
         throw FormatException('Duplicate pattern or unknown group: $id');
       }
+      final jumpExponent = item['jumpExponent'] as int?;
+      if (jumpExponent != null && (jumpExponent < 0 || jumpExponent > 20)) {
+        throw FormatException('Invalid starting jump: $id');
+      }
       patterns.add(
         PatternEntry(
           id: id,
@@ -73,6 +80,7 @@ class PatternCatalog {
           asset: item['asset'] as String,
           source: item['source'] as String,
           credit: item['credit'] as String,
+          jumpExponent: jumpExponent,
         ),
       );
     }
@@ -88,8 +96,17 @@ class PatternCatalog {
 
   Future<Block> _decode(PatternEntry entry) async {
     try {
+      final source = await _bundle.loadString(entry.asset, cache: false);
+      if (entry.asset.endsWith('.mc')) {
+        return Block.macrocell(
+          name: entry.name,
+          des: entry.description,
+          root: parseMacrocell(source),
+          source: source,
+        );
+      }
       return parseRlePattern(
-        await _bundle.loadString(entry.asset, cache: false),
+        source,
         name: entry.name,
         description: entry.description,
       );
