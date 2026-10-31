@@ -18,59 +18,6 @@ class ScreenHome extends StatelessWidget {
         final compact = constraints.maxWidth < 900;
         return _PlaybackShortcuts(
           child: Scaffold(
-            appBar: AppBar(
-              toolbarHeight: 48,
-              backgroundColor: const Color(0xFF171C19),
-              title: Row(
-                children: [
-                  const Icon(
-                    Icons.blur_on_rounded,
-                    color: Color(0xFFB8F36D),
-                    size: 30,
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'LIFE',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 5,
-                    ),
-                  ),
-                  if (MediaQuery.sizeOf(context).width >= 600)
-                    const SizedBox(width: 20),
-                  if (MediaQuery.sizeOf(context).width >= 600)
-                    const Expanded(
-                      child: Text(
-                        'A cellular playground',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9BA897),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: OutlinedButton.icon(
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (_) => const AlertDialog(
-                        title: Text('Simple rules. Endless possibility.'),
-                        content: Text(
-                          'A living cell survives with two or three neighbors. An empty cell comes to life with exactly three.\n\nDrag to explore. Scroll or pinch to zoom. Turn on Draw to edit cells, or choose a pattern to place.\n\nSpace starts or pauses playback.\n\nPause stops after the current jump. New world cancels a calculation immediately.',
-                        ),
-                      ),
-                    ),
-                    icon: const Icon(Icons.help_outline, size: 16),
-                    label: const Text('Guide'),
-                  ),
-                ),
-              ],
-            ),
             drawer: compact
                 ? const Drawer(width: 292, child: SafeArea(child: _Sidebar()))
                 : null,
@@ -94,11 +41,52 @@ class _Sidebar extends StatelessWidget {
   const _Sidebar();
 
   @override
-  Widget build(BuildContext context) => const Column(
-    children: [
-      Expanded(child: SubBlockExplorer()),
-      PerformancePanel(),
-    ],
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+            child: Row(
+              children: [
+                const Icon(Icons.blur_on_rounded, color: lime),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'LIFE',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => const AlertDialog(
+                      title: Text('Simple rules. Endless possibility.'),
+                      content: Text(
+                        'A living cell survives with two or three neighbors. An empty cell comes to life with exactly three.\n\nDrag to explore. Scroll or pinch to zoom. Turn on Draw to edit cells, or choose a pattern to place.\n\nSpace starts or pauses playback.\n\nPause stops after the current jump. New world cancels a calculation immediately.',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.help_outline, size: 16),
+                  label: const Text('Guide'),
+                ),
+              ],
+            ),
+          ),
+          const WorldSummary(),
+          const PlaybackControls(),
+          SizedBox(
+            height: (constraints.maxHeight - 510).clamp(450.0, double.infinity),
+            child: const SubBlockExplorer(),
+          ),
+          const PerformancePanel(),
+        ],
+      ),
+    ),
   );
 }
 

@@ -20,6 +20,13 @@ class GatedWorker extends FakeWorker {
 }
 
 Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
+  if (tester.view.physicalSize / tester.view.devicePixelRatio ==
+      const Size(800, 600)) {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
   addTearDown(() => tester.pumpWidget(const SizedBox()));
   final model = ModelBoard(
     workerFactory: () => worker ?? FakeWorker(),
@@ -155,6 +162,45 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('canvas fills the height with controls in the left sidebar', (
+    tester,
+  ) async {
+    await mount(tester);
+    expect(find.byType(AppBar), findsNothing);
+    final viewport = tester.getRect(find.byType(LifeViewport));
+    expect(viewport.top, 0);
+    expect(viewport.bottom, 900);
+    for (final label in ['Guide', 'Play', 'Save', 'GENERATION']) {
+      expect(tester.getRect(find.text(label)).right, lessThan(viewport.left));
+    }
+    tester.view.physicalSize = const Size(1000, 480);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('world actions keep a stable enabled state during playback', (
+    tester,
+  ) async {
+    final worker = GatedWorker();
+    final model = await mount(tester, worker: worker);
+    await tester.tap(find.text('Play'));
+    await tester.pump();
+    bool enabled(String label) =>
+        tester
+            .widget<TextButton>(find.widgetWithText(TextButton, label))
+            .onPressed !=
+        null;
+    final before = [enabled('Randomize'), enabled('Save'), enabled('Restore')];
+    worker.advanceGate = Completer<void>();
+    await tester.pump(const Duration(milliseconds: 33));
+    expect(model.isBusy, isTrue);
+    final during = [enabled('Randomize'), enabled('Save'), enabled('Restore')];
+    model.pause();
+    worker.advanceGate!.complete();
+    await tester.pumpAndSettle();
+    expect(during, before);
+  });
+
   testWidgets('running status stays steady across worker requests', (
     tester,
   ) async {
@@ -246,6 +292,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Glider Gun');
       await tester.pumpAndSettle();
       expect(find.text('Glider Gun'), findsNWidgets(2));
+      await tester.ensureVisible(find.text('Glider Gun').last);
       await tester.tap(find.text('Glider Gun').last);
       await tester.pumpAndSettle();
       expect(model.title, 'Glider Gun');
