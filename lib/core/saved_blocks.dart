@@ -7,7 +7,7 @@ const listBlocks = [
       [true, true, false, false, false],
       [false, false, false, false, false],
       [false, false, false, false, false],
-      [false, false, false, false, false]
+      [false, false, false, false, false],
     ],
     cols: 5,
     rows: 5,
@@ -20,7 +20,7 @@ const listBlocks = [
       [false, true, true, false, false],
       [false, true, false, true, false],
       [false, true, false, false, false],
-      [false, false, false, false, false]
+      [false, false, false, false, false],
     ],
     cols: 5,
     rows: 5,
@@ -35,7 +35,7 @@ const listBlocks = [
       [false, false, false, false, true, false],
       [false, false, false, false, true, false],
       [false, true, false, true, false, false],
-      [false, false, false, false, false, false]
+      [false, false, false, false, false, false],
     ],
     cols: 7,
     rows: 6,
@@ -48,7 +48,7 @@ const listBlocks = [
       [false, false, true, false, false],
       [false, true, true, true, false],
       [false, true, false, false, false],
-      [false, false, false, false, false]
+      [false, false, false, false, false],
     ],
     cols: 5,
     rows: 5,
@@ -105,7 +105,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -155,7 +155,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -205,7 +205,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -255,7 +255,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -305,7 +305,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -355,7 +355,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -405,7 +405,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -455,7 +455,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -505,7 +505,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -555,7 +555,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -605,7 +605,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -655,7 +655,7 @@ const listBlocks = [
         false,
         true,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -705,7 +705,7 @@ const listBlocks = [
         true,
         true,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -755,7 +755,7 @@ const listBlocks = [
         true,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -805,7 +805,7 @@ const listBlocks = [
         true,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -855,7 +855,7 @@ const listBlocks = [
         true,
         true,
         true,
-        true
+        true,
       ],
       [
         false,
@@ -905,7 +905,7 @@ const listBlocks = [
         true,
         true,
         true,
-        true
+        true,
       ],
       [
         false,
@@ -955,7 +955,7 @@ const listBlocks = [
         true,
         true,
         true,
-        true
+        true,
       ],
       [
         false,
@@ -1005,7 +1005,7 @@ const listBlocks = [
         true,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1055,7 +1055,7 @@ const listBlocks = [
         true,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1105,7 +1105,7 @@ const listBlocks = [
         true,
         true,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1155,7 +1155,7 @@ const listBlocks = [
         false,
         true,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1205,7 +1205,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1255,7 +1255,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1305,7 +1305,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1355,7 +1355,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1405,7 +1405,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1455,7 +1455,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1505,7 +1505,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1555,7 +1555,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1605,7 +1605,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1655,8 +1655,8 @@ const listBlocks = [
         false,
         false,
         false,
-        false
-      ]
+        false,
+      ],
     ],
     cols: 32,
     rows: 48,
@@ -1703,7 +1703,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1743,7 +1743,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1783,7 +1783,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1823,7 +1823,7 @@ const listBlocks = [
         false,
         true,
         true,
-        false
+        false,
       ],
       [
         false,
@@ -1863,7 +1863,7 @@ const listBlocks = [
         false,
         true,
         true,
-        false
+        false,
       ],
       [
         false,
@@ -1903,7 +1903,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1943,7 +1943,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -1983,7 +1983,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -2023,7 +2023,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -2063,7 +2063,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -2103,7 +2103,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -2143,7 +2143,7 @@ const listBlocks = [
         false,
         false,
         false,
-        false
+        false,
       ],
       [
         false,
@@ -2183,8 +2183,8 @@ const listBlocks = [
         false,
         false,
         false,
-        false
-      ]
+        false,
+      ],
     ],
     cols: 13,
     rows: 38,
