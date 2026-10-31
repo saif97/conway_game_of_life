@@ -1,0 +1,7 @@
+#N Beacon
+#C Stephen Silver’s Life Lexicon, with Dave Greene and contributors · CC BY-SA 3.0
+#C Source: https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Help/Lexicon/lex_b.htm#beacon
+#C Diagram converted to RLE by this project; cell arrangement unchanged.
+#C https://creativecommons.org/licenses/by-sa/3.0/
+x = 4, y = 4, rule = B3/S23
+2o$o$3bo$2b2o!

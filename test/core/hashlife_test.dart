@@ -135,11 +135,7 @@ void main() {
 
   test('bundled patterns including the gun and puffer match the oracle', () {
     for (final block in listBlocks) {
-      var expected = {
-        for (var x = 0; x < block.matrixBlock.length; x++)
-          for (var y = 0; y < block.matrixBlock[x].length; y++)
-            if (block.matrixBlock[x][y]) (x, y),
-      };
+      var expected = {...block.liveCells};
       final u = seeded(expected);
       for (var tick = 0; tick < 8; tick++) {
         for (var i = 0; i < 8; i++) {

@@ -1,0 +1,7 @@
+#N Middleweight spaceship
+#C Stephen Silver’s Life Lexicon, with Dave Greene and contributors · CC BY-SA 3.0
+#C Source: https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Help/Lexicon/lex_m.htm#mwss
+#C Diagram converted to RLE by this project; cell arrangement unchanged.
+#C https://creativecommons.org/licenses/by-sa/3.0/
+x = 6, y = 5, rule = B3/S23
+3bo$bo3bo$o$o4bo$5o!

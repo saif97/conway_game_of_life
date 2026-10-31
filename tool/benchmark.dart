@@ -15,12 +15,7 @@ void main() {
         for (var x = 0; x < 64; x++)
           if (random.nextBool()) (x, y),
     },
-    for (final block in listBlocks)
-      block.name: {
-        for (var x = 0; x < block.matrixBlock.length; x++)
-          for (var y = 0; y < block.matrixBlock[x].length; y++)
-            if (block.matrixBlock[x][y]) (x, y),
-      },
+    for (final block in listBlocks) block.name: {...block.liveCells},
   };
   for (final entry in workloads.entries) {
     for (final exponent in [0, 8]) {

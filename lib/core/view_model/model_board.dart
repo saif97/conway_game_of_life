@@ -175,9 +175,7 @@ class ModelBoard extends ChangeNotifier {
   }
 
   List<List<int>> _pattern(Block block) => [
-    for (var x = 0; x < block.matrixBlock.length; x++)
-      for (var y = 0; y < block.matrixBlock[x].length; y++)
-        if (block.matrixBlock[x][y]) [x, y],
+    for (final (x, y) in block.liveCells) [x, y],
   ];
   Future<void> loadPattern(Block block) async {
     final reset = clear();
