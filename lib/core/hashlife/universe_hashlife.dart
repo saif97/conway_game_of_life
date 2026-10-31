@@ -1,15 +1,16 @@
 import 'dart:math';
 
 import 'node.dart';
+import 'node_table.dart';
 
 typedef CellPosition = (int x, int y);
 
 /// Conway B3/S23 on an expanding, dead-background plane.
 ///
-/// Hash-consing makes node comparisons constant time. Successors are cached by
-/// node AND jump exponent; changing playback speed never reuses a wrong result.
+/// Hash-consing makes node comparisons constant time. Each node remembers its
+/// last successor AND jump exponent; changing speed never reuses a wrong result.
 final class HashlifeUniverse {
-  HashlifeUniverse({int universeExponent = 5, this.cacheLimit = 200000}) {
+  HashlifeUniverse({int universeExponent = 5, this.cacheLimit = 8000000}) {
     RangeError.checkValueInInterval(universeExponent, 3, 20);
     if (cacheLimit < 1) throw ArgumentError.value(cacheLimit, 'cacheLimit');
     _root = _empty(universeExponent);
@@ -18,23 +19,31 @@ final class HashlifeUniverse {
 
   static const _dead = Node.leaf(false);
   static const _alive = Node.leaf(true);
+
+  /// Soft limit on interned nodes plus populated successor memos, not bytes.
+  /// Large circuitry needs millions of entries to reuse work between jumps.
   final int cacheLimit;
-  final _nodes = <(Node, Node, Node, Node), Node>{};
-  final _results = <(Node, int), Node>{};
+  final _nodes = NodeTable();
+  int _cachedResults = 0;
   final _empties = <int, Node>{0: _dead};
   late Node _root, _savedRoot;
   int _x = 0, _y = 0, _savedX = 0, _savedY = 0;
   int generation = 0, _savedGeneration = 0;
+  int _cacheCollections = 0;
+  int _cacheEntriesBeforeLastCollection = 0;
 
   Node get root => _root;
   int get originX => _x;
   int get originY => _y;
   int get population => _root.population;
   int get cachedNodes => _nodes.length;
-  int get cachedResults => _results.length;
+  int get cachedResults => _cachedResults;
 
-  Node _join(Node a, Node b, Node c, Node d) =>
-      _nodes.putIfAbsent((a, b, c, d), () => Node.branch(a, b, c, d));
+  /// Automatic collections over this universe's lifetime (excludes load/clear).
+  int get cacheCollections => _cacheCollections;
+  int get cacheEntriesBeforeLastCollection => _cacheEntriesBeforeLastCollection;
+
+  Node _join(Node a, Node b, Node c, Node d) => _nodes.join(a, b, c, d);
 
   Node _empty(int depth) {
     final existing = _empties[depth];
@@ -117,11 +126,15 @@ final class HashlifeUniverse {
 
   Node _successor(Node n, int exponent) {
     if (n.population == 0) return _empty(n.depth - 1);
-    final key = (n, exponent);
-    final cached = _results[key];
-    if (cached != null) return cached;
-    if (n.depth == 2) return _results[key] = _base(n);
+    final memo = n.successor!;
+    if (memo.exponent == exponent) return memo.result!;
+    if (memo.result == null) _cachedResults++;
+    final result = n.depth == 2 ? _base(n) : _computeSuccessor(n, exponent);
+    memo.exponent = exponent;
+    return memo.result = result;
+  }
 
+  Node _computeSuccessor(Node n, int exponent) {
     final a = n.nw!, b = n.ne!, c = n.sw!, d = n.se!;
     final jump = min(exponent, n.depth - 3);
     final r00 = _successor(a, jump);
@@ -140,7 +153,7 @@ final class HashlifeUniverse {
           : _center(joined);
     }
 
-    return _results[key] = _join(
+    return _join(
       finish(r00, r01, r10, r11),
       finish(r01, r02, r11, r12),
       finish(r10, r11, r20, r21),
@@ -259,14 +272,19 @@ final class HashlifeUniverse {
   }
 
   void _maintainCache() {
-    if (_nodes.length + _results.length > cacheLimit) compact();
+    final entries = _nodes.length + cachedResults;
+    if (entries > cacheLimit) {
+      _cacheCollections++;
+      _cacheEntriesBeforeLastCollection = entries;
+      compact();
+    }
   }
 
   /// Drop historical results and re-intern the live and saved DAGs. The limit
   /// is soft: a single advance and reachable state may exceed it.
   void compact() {
     _nodes.clear();
-    _results.clear();
+    _cachedResults = 0;
     _empties
       ..clear()
       ..[0] = _dead;

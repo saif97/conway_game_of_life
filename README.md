@@ -69,6 +69,12 @@ excels at repeating patterns and large jumps; it is not universally fastest for
 chaotic dense boards. Web is the supported target of this modernization; native
 platform scaffolds still need separate migration and validation.
 
+To benchmark large worlds such as the hexadecimal counter through the actual
+JS/Wasm workers, run `bash tool/build_workers.sh` then
+`node tool/benchmark_workers.mjs`. It measures consecutive playback, checks
+state signatures, saves JSON results, and supports baseline comparisons and
+worker CPU profiles. See [the performance guide](docs/performance.md).
+
 ## Publish to GitHub Pages
 
 Site URL after deployment: https://saif97.github.io/conway_game_of_life/
