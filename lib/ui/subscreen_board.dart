@@ -16,17 +16,11 @@ String number(int value) => value.toString().replaceAllMapped(
 class SubScreenBoard extends StatelessWidget {
   const SubScreenBoard({super.key});
   @override
-  Widget build(BuildContext context) => const Column(
-    children: [
-      _WorldHeader(),
-      Expanded(child: LifeViewport()),
-      _Controls(),
-    ],
-  );
+  Widget build(BuildContext context) => const LifeViewport();
 }
 
-class _WorldHeader extends StatelessWidget {
-  const _WorldHeader();
+class WorldSummary extends StatelessWidget {
+  const WorldSummary({super.key});
   @override
   Widget build(BuildContext context) {
     final (title, generation, population, error) = context.select(
@@ -39,28 +33,31 @@ class _WorldHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: _Metric(
+                  'GENERATION',
+                  number(generation),
+                  key: const Key('generation'),
                 ),
               ),
-              _Metric(
-                'GENERATION',
-                number(generation),
-                key: const Key('generation'),
-              ),
-              const SizedBox(width: 22),
-              _Metric(
-                'LIVING CELLS',
-                number(population),
-                key: const Key('population'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _Metric(
+                  'LIVING CELLS',
+                  number(population),
+                  key: const Key('population'),
+                ),
               ),
             ],
           ),
@@ -86,7 +83,7 @@ class _Metric extends StatelessWidget {
   final String label, value;
   @override
   Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.end,
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
         label,
@@ -109,8 +106,8 @@ class _Metric extends StatelessWidget {
   );
 }
 
-class _Controls extends StatelessWidget {
-  const _Controls();
+class PlaybackControls extends StatelessWidget {
+  const PlaybackControls({super.key});
   @override
   Widget build(BuildContext context) {
     final model = context.read<ModelBoard>();
@@ -123,7 +120,8 @@ class _Controls extends StatelessWidget {
         m.error != null,
       ),
     );
-    final disabled = busy || hasError;
+    // Keep availability steady between worker requests during playback.
+    final disabled = playing || busy || hasError;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: const BoxDecoration(
@@ -178,24 +176,27 @@ class _Controls extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: jump,
-                        isDense: true,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        items: [
-                          for (var i = 0; i <= 20; i++)
-                            DropdownMenuItem(
-                              value: i,
-                              child: Text(
-                                '${number(1 << i)} gen',
-                                style: const TextStyle(fontSize: 12),
+                    Flexible(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          isExpanded: true,
+                          value: jump,
+                          isDense: true,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          items: [
+                            for (var i = 0; i <= 20; i++)
+                              DropdownMenuItem(
+                                value: i,
+                                child: Text(
+                                  '${number(1 << i)} gen',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
                               ),
-                            ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) model.jumpExponent = value;
-                        },
+                          ],
+                          onChanged: (value) {
+                            if (value != null) model.jumpExponent = value;
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -518,24 +519,31 @@ class _LifeViewportState extends State<LifeViewport> {
               right: 20,
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xE6232B21),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'INFINITE CANVAS',
-                      style: TextStyle(
-                        color: Color(0xFF9BA897),
-                        fontSize: 9,
-                        letterSpacing: 1.5,
+                  if (Scaffold.of(context).hasDrawer)
+                    IconButton.filled(
+                      tooltip: 'Open navigation menu',
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      icon: const Icon(Icons.menu),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xE6232B21),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'INFINITE CANVAS',
+                        style: TextStyle(
+                          color: Color(0xFF9BA897),
+                          fontSize: 9,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
-                  ),
                   const Spacer(),
                   FilterChip(
                     label: const Text('Draw', style: TextStyle(fontSize: 11)),
