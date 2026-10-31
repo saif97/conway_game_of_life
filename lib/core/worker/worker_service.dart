@@ -52,11 +52,12 @@ class WorkerService {
     final view = (message['view'] as List).cast<num>();
     final left = view[0].floor(), top = view[1].floor();
     final right = view[2].ceil(), bottom = view[3].ceil();
-    // Bound work and transfer size independently of world size. Aggregation is
-    // display-only. A power-of-two node can be at most 2x smaller than this.
+    // Match screen resolution, with a safety cap for unusually large views.
+    // Aggregation is display-only; preserve density instead of filling sparse
+    // subtrees as if every cell in them were alive.
     final detail = max(
       1,
-      max(view[4].ceil(), ((max(right - left, bottom - top)) / 128).ceil()),
+      max(view[4].floor(), (max(right - left, bottom - top) / 2048).ceil()),
     );
     final cells = <double>[];
     universe.visit(
@@ -65,8 +66,12 @@ class WorkerService {
       right: right,
       bottom: bottom,
       minimumSize: detail,
-      onSquare: (x, y, size) =>
-          cells.addAll([x.toDouble(), y.toDouble(), size.toDouble()]),
+      onSquare: (x, y, size, population) => cells.addAll([
+        x.toDouble(),
+        y.toDouble(),
+        size.toDouble(),
+        population / (size.toDouble() * size),
+      ]),
     );
     return {
       'bounds': [universe.originX, universe.originY, universe.root.size],

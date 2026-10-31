@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:conway_game_of_life/ui/screen_home.dart';
 import 'package:conway_game_of_life/ui/subscreen_board.dart';
@@ -6,9 +8,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_worker.dart';
 
-Future<ModelBoard> mount(WidgetTester tester) async {
+class GatedWorker extends FakeWorker {
+  Completer<void>? advanceGate;
+
+  @override
+  Future<Map<String, Object?>> request(Map<String, Object?> message) async {
+    if (message['command'] == 'advance') await advanceGate?.future;
+    return super.request(message);
+  }
+}
+
+Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
   addTearDown(() => tester.pumpWidget(const SizedBox()));
-  final model = ModelBoard(workerFactory: FakeWorker.new, demo: false);
+  final model = ModelBoard(
+    workerFactory: () => worker ?? FakeWorker(),
+    demo: false,
+  );
   await tester.pumpWidget(
     MaterialApp(
       theme: ThemeData.dark(),
@@ -20,6 +35,116 @@ Future<ModelBoard> mount(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Draw paints a continuous stroke without moving the camera', (
+    tester,
+  ) async {
+    final worker = FakeWorker();
+    final model = await mount(tester, worker: worker);
+    final viewport = find.byType(LifeViewport);
+    final paint = find.descendant(
+      of: viewport,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is CustomPaint && widget.painter is LifePainter,
+      ),
+    );
+    final camera =
+        (tester.widget<CustomPaint>(paint).painter! as LifePainter).camera;
+    final before = camera.value;
+    final origin = tester.getTopLeft(viewport);
+    await tester.tap(find.text('Draw'));
+    await tester.pump();
+    final gesture = await tester.startGesture(origin + const Offset(85, 145));
+    await gesture.moveTo(origin + const Offset(185, 145));
+    await tester.pump();
+    await gesture.moveTo(origin + const Offset(85, 145));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(camera.value, before);
+    expect(model.population, 11);
+    expect(worker.service.universe.liveCells(), {
+      for (var x = 4; x <= 14; x++) (x, 10),
+    });
+
+    // A new stroke may toggle the same cells again.
+    final erase = await tester.startGesture(origin + const Offset(185, 145));
+    await erase.moveTo(origin + const Offset(85, 145));
+    await erase.up();
+    await tester.pumpAndSettle();
+    expect(model.population, 0);
+    expect(camera.value, before);
+
+    await tester.tap(find.text('Draw'));
+    await tester.pump();
+    await tester.dragFrom(origin + const Offset(85, 145), const Offset(100, 0));
+    await tester.pumpAndSettle();
+    expect(camera.value.$1, isNot(before.$1));
+    expect(model.population, 0);
+  });
+
+  testWidgets('pattern library uses a sidebar or drawer, never both', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await mount(tester);
+
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+    expect(find.byTooltip('Open navigation menu'), findsNothing);
+    expect(tester.widget<Scaffold>(find.byType(Scaffold)).drawer, isNull);
+
+    tester.view.physicalSize = const Size(899, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsNothing);
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+    expect(find.byTooltip('Open navigation menu'), findsNothing);
+    expect(tester.widget<Scaffold>(find.byType(Scaffold)).drawer, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('running status stays steady across worker requests', (
+    tester,
+  ) async {
+    final worker = GatedWorker();
+    final model = await mount(tester, worker: worker);
+    await tester.tap(find.text('Play'));
+    await tester.pump();
+    expect(find.text('Running'), findsOneWidget);
+
+    for (var i = 0; i < 3; i++) {
+      worker.advanceGate = Completer<void>();
+      await tester.pump(const Duration(milliseconds: 33));
+      expect(model.isBusy, isTrue);
+      expect(model.isPlaying, isTrue);
+      expect(find.text('Running'), findsOneWidget);
+
+      worker.advanceGate!.complete();
+      await tester.pump();
+      expect(model.isBusy, isFalse);
+      expect(find.text('Running'), findsOneWidget);
+    }
+
+    worker.advanceGate = Completer<void>();
+    await tester.pump(const Duration(milliseconds: 33));
+    await tester.tap(find.text('Pause'));
+    await tester.pump();
+    expect(
+      find.text('Finishing current operation · you can keep exploring'),
+      findsOneWidget,
+    );
+    worker.advanceGate!.complete();
+    await tester.pump();
+    expect(find.text('Paused · take a closer look'), findsOneWidget);
+  });
+
   testWidgets('draw, step, save and restore through the redesigned controls', (
     tester,
   ) async {
