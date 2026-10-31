@@ -19,6 +19,12 @@ void main() {
       expect(entry.source, startsWith('https://'));
       expect(entry.credit, isNotEmpty);
       final universe = HashlifeUniverse();
+      if (block.tree != null) {
+        universe.loadTree(block.tree!);
+        expect(universe.population, block.population, reason: entry.id);
+        expect(block.previewPixels(44 / block.rows).length, lessThan(3000));
+        continue;
+      }
       for (final (x, y) in block.liveCells) {
         expect(x, inInclusiveRange(0, block.cols - 1));
         expect(y, inInclusiveRange(0, block.rows - 1));
@@ -35,6 +41,43 @@ void main() {
       );
     }
   });
+
+  test(
+    'published metapixel world loads and restores without flattening',
+    () async {
+      final catalog = await PatternCatalog.load();
+      final entry = catalog.patterns.singleWhere(
+        (e) => e.id == 'metapixel-galaxy',
+      );
+      final block = await catalog.loadPattern(entry);
+      expect(block.population, 7408195);
+      final workers = <FakeWorker>[];
+      final model = ModelBoard(
+        workerFactory: () {
+          final worker = FakeWorker();
+          workers.add(worker);
+          return worker;
+        },
+        demo: false,
+      );
+      addTearDown(model.dispose);
+      await model.ready;
+      await model.loadPattern(block);
+      expect(model.error, isNull);
+      expect(model.population, 7408195);
+      expect(model.cameraReset, 1);
+      final load = workers.last.requests.singleWhere(
+        (m) => m['command'] == 'loadMacrocell',
+      );
+      expect(load.containsKey('pattern'), isFalse);
+      expect(workers.last.service.universe.cachedNodes, lessThan(10000));
+      await model.step();
+      expect(model.generation, 1);
+      await model.restoreState();
+      expect(model.generation, 0);
+      expect(model.population, 7408195);
+    },
+  );
 
   test(
     'downloaded classics have their documented periods and motion',

@@ -436,10 +436,10 @@
     },
     {
       "id": "unit-life-cell",
-      "name": "Life inside Life",
+      "name": "Unit Life cell (512 × 512)",
       "group": "constructions",
-      "description": "A 512-by-512 construction used as a larger Life cell.",
-      "tip": "Explore the components, then try larger generation jumps.",
+      "description": "A single metacell building block for Life inside Life, rather than a complete simulated world.",
+      "tip": "Explore the component circuitry. For a complete working Life-inside-Life pattern, load OTCA metapixel galaxy.",
       "asset": "assets/patterns/unit-life-cell.rle",
       "upstream": "https://raw.githubusercontent.com/AlephAlpha/golly/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/Life/Signal-Circuitry/Unit-Life-Cell-512x512.rle",
       "source": "https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/Life/Signal-Circuitry/Unit-Life-Cell-512x512.rle",
@@ -493,6 +493,71 @@
       "source": "https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/Life/Signal-Circuitry/constructor-memory-loop.rle",
       "credit": "Golly pattern collection · original author notes preserved in the RLE file",
       "sha256": "0c0d17d486d260d495e4e7c4d9b2717bc057910adb09a17eb06a8d1f76d009bf"
+    },
+    {
+      "id": "metapixel-galaxy",
+      "name": "OTCA metapixel galaxy",
+      "group": "constructions",
+      "description": "Life inside Life: a complete Kok’s galaxy oscillator built from millions of cells.",
+      "tip": "Brice Due’s OTCA metapixels simulate Conway Life. Zoom in to see the circuitry; zoom out to see the galaxy. One simulated generation takes 35,328 underlying generations. Starts at 1,024 generations per jump.",
+      "asset": "assets/patterns/metapixel-galaxy.mc",
+      "upstream": "https://raw.githubusercontent.com/AlephAlpha/golly/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Metacell/metapixel-galaxy.mc.gz",
+      "source": "https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Metacell/metapixel-galaxy.mc.gz",
+      "credit": "Brice Due · OTCA metapixel tiling of Jan Kok’s galaxy · Golly collection",
+      "jumpExponent": 10,
+      "sha256": "38441e70174212436e83b540a77ea626be2215e0cc9754808047c472b120b06c"
+    },
+    {
+      "id": "metapixel-p216-gun",
+      "name": "OTCA metapixel p216 gun",
+      "group": "constructions",
+      "description": "Millions of Conway cells simulate David Eppstein’s gun in the B35/S236 rule.",
+      "tip": "The underlying world uses ordinary Conway Life; its giant metacells implement B35/S236. One simulated generation takes 35,328 underlying generations. Try larger jumps to follow the gun’s output.",
+      "asset": "assets/patterns/metapixel-p216-gun.mc",
+      "upstream": "https://raw.githubusercontent.com/AlephAlpha/golly/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Metacell/metapixel-p216-gun.mc.gz",
+      "source": "https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Metacell/metapixel-p216-gun.mc.gz",
+      "credit": "Brice Due · OTCA metapixel tiling of David Eppstein’s p216 gun · Golly collection",
+      "jumpExponent": 10,
+      "sha256": "cbbb4026732e31dae77942332c8035bb4c3aea738d7c655f60b87ad000730816"
+    },
+    {
+      "id": "demonoid",
+      "name": "Demonoid spaceship",
+      "group": "constructions",
+      "description": "A self-constructing spaceship driven by a long tape of glider instructions.",
+      "tip": "This published HashLife-friendly Demonoid travels 4,096 cells diagonally every 2,097,152 generations. Starts at 16,384 generations per jump; increase the jump to follow a complete construction cycle.",
+      "asset": "assets/patterns/demonoid.mc",
+      "upstream": "https://raw.githubusercontent.com/AlephAlpha/golly/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Constructions/demonoid-c512-hashlife-friendly.mc.gz",
+      "source": "https://github.com/AlephAlpha/golly/blob/2cf06330cab58dccec085724067e17ddd7a56905/Patterns/HashLife/Constructions/demonoid-c512-hashlife-friendly.mc.gz",
+      "credit": "Dave Greene, 10 October 2019 · compiled with Adam P. Goucher’s slsparse · Golly collection",
+      "jumpExponent": 14,
+      "sha256": "a3337f2287db9f4d3404657b0ed9d164f033bac3937e3d1ab4ace9d5fcefc11b"
+    },
+    {
+      "id": "hexadecimal-counter",
+      "name": "Three-digit hexadecimal counter",
+      "group": "constructions",
+      "description": "A working hexadecimal counter with memory, toggle switches and seven-segment displays.",
+      "tip": "Adam P. Goucher’s 2008 counter combines period doublers, memory units and binary-to-hex conversion. Starts at the author’s recommended 32,768 generations per jump. Zoom into the displays or reduce the jump to follow individual signals.",
+      "asset": "assets/patterns/hexadecimal-counter.mc",
+      "upstream": "https://golly.sourceforge.net/patterns/hex-3digit-7seg.mc.gz",
+      "source": "https://golly.sourceforge.net/patterns/hex-3digit-7seg.mc.gz",
+      "credit": "Adam P. Goucher (Calcyman), 2008 · Golly Very Large Patterns archive",
+      "jumpExponent": 15,
+      "sha256": "938e3b324e1e29c852b37165b2bedbfd9e8a60f4c1367bfd704a82e4b8dad6c5"
+    },
+    {
+      "id": "pi-calculator",
+      "name": "Pi calculator",
+      "group": "constructions",
+      "description": "A complete computing machine that calculates and prints decimal digits of pi.",
+      "tip": "Adam P. Goucher’s published 2010 calculator. Starts at 32,768 generations per jump; zoom in to explore its circuitry and output. Computing visible output takes many underlying generations.",
+      "asset": "assets/patterns/pi-calculator.mc",
+      "upstream": "https://golly.sourceforge.io/patterns/pi.mc",
+      "source": "https://golly.sourceforge.io/patterns/pi.mc",
+      "credit": "Adam P. Goucher, 2010 · Golly Very Large Patterns archive",
+      "jumpExponent": 15,
+      "sha256": "ba2baf318cbbddb07ab0a172040339803cd60dfce8ddd7d93a22bf1c3d88e967"
     }
   ]
 }

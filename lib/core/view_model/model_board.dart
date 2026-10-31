@@ -29,6 +29,7 @@ class ModelBoard extends ChangeNotifier {
   Block? _insertedBlock;
   Float64List cells = Float64List(0);
   int generation = 0, population = 0, elapsedUs = 0, detail = 1;
+  int? simulationUs, simulatedGenerations;
   String? error;
   String title = 'Untitled world';
   bool get isPlaying => _playing;
@@ -88,6 +89,10 @@ class ModelBoard extends ChangeNotifier {
       generation = reply['generation'] as int;
       population = reply['population'] as int;
       if (command['command'] != 'frame') elapsedUs = reply['elapsedUs'] as int;
+      if (command['command'] == 'advance') {
+        simulationUs = elapsedUs;
+        simulatedGenerations = 1 << (command['exponent'] as int);
+      }
       detail = reply['detail'] as int;
       _drawnRevision = revision;
     } on WorkerStopped {
@@ -147,6 +152,7 @@ class ModelBoard extends ChangeNotifier {
     _insertedBlock = null;
     cells = Float64List(0);
     generation = population = elapsedUs = 0;
+    simulationUs = simulatedGenerations = null;
     error = null;
     title = 'Untitled world';
     _drawnRevision = -1;
@@ -183,7 +189,11 @@ class ModelBoard extends ChangeNotifier {
     await reset;
     if (_disposed || epoch != _epoch) return;
     title = block.name;
-    await _enqueue({'command': 'load', 'pattern': _pattern(block)});
+    await _enqueue(
+      block.macrocellSource != null
+          ? {'command': 'loadMacrocell', 'source': block.macrocellSource}
+          : {'command': 'load', 'pattern': _pattern(block)},
+    );
     if (!_disposed && epoch == _epoch) {
       cameraReset++;
       notifyListeners();

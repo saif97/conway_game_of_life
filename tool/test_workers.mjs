@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
+import { readFile } from 'node:fs/promises';
 
 // Execute the real browser bootstrap and generated binaries in independent
 // threads. The shim supplies browser worker messaging and file-based fetch.
@@ -56,12 +57,30 @@ for (const wasm of [false, true]) {
     assert.equal((await request('restore')).generation,0);
     await assert.rejects(request('unknown'), /Unknown/);
     assert.equal((await request('frame')).population,5);
+    const macrocell = await readFile(new URL('../assets/patterns/metapixel-galaxy.mc', import.meta.url), 'utf8');
+    const galaxy = await request('loadMacrocell', {source: macrocell, view: [0,0,32768,32768,128]});
+    assert.equal(galaxy.population, 7408195);
+    assert.ok(galaxy.nodes < 10000, 'Published galaxy must stay compressed');
+    const galaxyStep = await request('advance', {exponent: 10, view: [0,0,32768,32768,128]});
+    assert.equal(galaxyStep.generation, 1024);
+    assert.equal(galaxyStep.population, 7044895);
+    assert.equal((await request('restore')).population, 7408195);
+    for (const [file, population] of [
+      ['hexadecimal-counter', 328591], ['pi-calculator', 1189325],
+      ['demonoid', 106639], ['metapixel-p216-gun', 128116349],
+    ]) {
+      const source = await readFile(new URL(`../assets/patterns/${file}.mc`, import.meta.url), 'utf8');
+      const world = await request('loadMacrocell', {source});
+      assert.equal(world.population, population, file);
+      assert.equal((await request('advance', {exponent: 0})).generation, 1, file);
+      assert.equal((await request('restore')).population, population, file);
+    }
     let heartbeats = 0;
     const heartbeat = setInterval(() => heartbeats++, 1);
     try { await request('randomize', {exponent:8, seed:42}); }
     finally { clearInterval(heartbeat); }
     assert.ok(heartbeats > 0, 'Main-thread timers must continue during world creation');
-    console.log(`${wasm ? 'Wasm' : 'JavaScript'} worker passed: startup, messages, transferred frames, exact jumps, restore, errors, main-thread heartbeat.`);
+    console.log(`${wasm ? 'Wasm' : 'JavaScript'} worker passed: startup, messages, transferred frames, exact jumps, restore, errors, five published macrocell worlds, main-thread heartbeat.`);
   } finally {
     clearTimeout(timeout);
     await worker.terminate();
