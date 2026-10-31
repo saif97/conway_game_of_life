@@ -81,9 +81,19 @@ selects a supported build/renderer; do not force Wasm on incompatible browsers.
 Use the stable release's feature detection defaults. The current online docs
 also describe newer 3.50 behavior, which should not be assumed for this pin.
 
-Firebase Hosting is configured with COOP `same-origin` and COEP `credentialless`
-for the renderer's threading support, and an explicit Wasm MIME type. These
-headers must also be configured on any alternative host.
+GitHub Pages is the deployment target. `tool/build_pages.sh` sets the repository
+base path to `/conway_game_of_life/`; worker URLs resolve relative to that base.
+The deployment workflow, staged at `tool/pages.yml` until moved into
+`.github/workflows/`, tests and builds on main, uploads a Pages artifact, and
+deploys with narrowly scoped Pages and OIDC permissions. Pages must use the
+GitHub Actions source. Pull requests do not publish the site.
+
+Pages does not offer custom COOP/COEP response headers. The pinned Flutter loader
+automatically uses single-threaded skwasm when `crossOriginIsolated` is false.
+The dedicated simulation worker does not require SharedArrayBuffer or isolation,
+so it continues to offload evolution. Memory estimates requiring isolation fall
+back to the explicitly partial JS heap metric or unavailable status. Firebase
+hosting configuration is removed; an existing Firebase deployment is unaffected.
 
 ### Worker ownership and scheduling
 
@@ -114,13 +124,11 @@ startup, transferable frames, exact million-generation glider positions, restore
 errors, and a main-thread heartbeat during work. Model tests additionally cover
 backpressure, coalescing, cancellation, stale replies, disposal, and error recovery.
 
-The obsolete hand-written service worker bootstrap and unused Firebase 8.7.1
-scripts were removed. Firebase Hosting needs no Firebase JavaScript SDK. Use
-normal HTTP caching/revalidation and host-provided compression. Outputs retain
-stable filenames, so the hosting configuration requests revalidation rather than
-unsafe year-long immutable caching. Offline installation is not implemented by
-this change. Deploy the entire build/web directory, including renderer assets
-and fallback code; only the selected runtime resources are loaded as needed.
+The obsolete hand-written service worker bootstrap and unused Firebase scripts
+were removed. Deploy the entire build/web artifact, including renderer assets
+and fallback code. GitHub Pages manages caching and compression; offline
+installation is not implemented. The app uses no path-based routing and therefore
+does not require server-side SPA rewrites.
 
 Browser validation should include Chromium and fallback browsers, startup time,
 main-thread frame latency, a moving gun/puffer, dense random seeds, pan/zoom and
@@ -167,9 +175,10 @@ when the panel is disposed, and late asynchronous replies are ignored.
 - Reproducible benchmark harness executed on the Dart VM and Node/Wasm. These
   measurements exclude rendering and are not evidence of browser frame rates.
 
-Chrome CI checks are defined in the staged workflow at `tool/flutter.yml`, but
-were not executed locally. GitHub Actions remains inactive until the file is
-moved to `.github/workflows/flutter.yml` using workflow-authorized credentials. No native
+Chrome CI checks are configured in `.github/workflows/flutter.yml`, but
+were not executed locally. The Pages workflow is staged separately at
+`tool/pages.yml` pending installation with workflow-authorized credentials.
+No native
 platform builds, browser frame-rate profiling, or production deployment were
 performed. Existing installations of the old service worker should be included
 in deployment testing; clients may need to close old tabs for a worker update
