@@ -35,6 +35,53 @@ Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
 }
 
 void main() {
+  testWidgets('Draw paints a continuous stroke without moving the camera', (
+    tester,
+  ) async {
+    final worker = FakeWorker();
+    final model = await mount(tester, worker: worker);
+    final viewport = find.byType(LifeViewport);
+    final paint = find.descendant(
+      of: viewport,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is CustomPaint && widget.painter is LifePainter,
+      ),
+    );
+    final camera =
+        (tester.widget<CustomPaint>(paint).painter! as LifePainter).camera;
+    final before = camera.value;
+    final origin = tester.getTopLeft(viewport);
+    await tester.tap(find.text('Draw'));
+    await tester.pump();
+    final gesture = await tester.startGesture(origin + const Offset(85, 145));
+    await gesture.moveTo(origin + const Offset(185, 145));
+    await tester.pump();
+    await gesture.moveTo(origin + const Offset(85, 145));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(camera.value, before);
+    expect(model.population, 11);
+    expect(worker.service.universe.liveCells(), {
+      for (var x = 4; x <= 14; x++) (x, 10),
+    });
+
+    // A new stroke may toggle the same cells again.
+    final erase = await tester.startGesture(origin + const Offset(185, 145));
+    await erase.moveTo(origin + const Offset(85, 145));
+    await erase.up();
+    await tester.pumpAndSettle();
+    expect(model.population, 0);
+    expect(camera.value, before);
+
+    await tester.tap(find.text('Draw'));
+    await tester.pump();
+    await tester.dragFrom(origin + const Offset(85, 145), const Offset(100, 0));
+    await tester.pumpAndSettle();
+    expect(camera.value.$1, isNot(before.$1));
+    expect(model.population, 0);
+  });
+
   testWidgets('pattern library uses a sidebar or drawer, never both', (
     tester,
   ) async {

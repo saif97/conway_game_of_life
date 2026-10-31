@@ -323,6 +323,8 @@ class _LifeViewportState extends State<LifeViewport> {
   Offset _anchor = Offset.zero;
   Size _size = Size.zero;
   bool _draw = false;
+  final _strokeCells = <(int, int)>{};
+  (int, int)? _lastStrokeCell;
   late ModelBoard _model;
   int _reset = 0;
 
@@ -354,6 +356,42 @@ class _LifeViewportState extends State<LifeViewport> {
   }
 
   Offset _world(Offset local) => (local - _camera.value.$1) / _camera.value.$2;
+
+  void _startStroke(Offset local) {
+    _focus.requestFocus();
+    _endStroke();
+    _drawTo(local);
+  }
+
+  void _drawTo(Offset local) {
+    final world = _world(local);
+    final target = (world.dx.floor(), world.dy.floor());
+    var (x, y) = _lastStrokeCell ?? target;
+    final dx = (target.$1 - x).abs(), dy = (target.$2 - y).abs();
+    final sx = x < target.$1 ? 1 : -1, sy = y < target.$2 ? 1 : -1;
+    var error = dx - dy;
+    // Rasterize the segment so fast pointer movement leaves no gaps.
+    while (true) {
+      if (_strokeCells.add((x, y))) _model.edit(x, y);
+      if (x == target.$1 && y == target.$2) break;
+      final twiceError = 2 * error;
+      if (twiceError > -dy) {
+        error -= dy;
+        x += sx;
+      }
+      if (twiceError < dx) {
+        error += dx;
+        y += sy;
+      }
+    }
+    _lastStrokeCell = target;
+  }
+
+  void _endStroke() {
+    _lastStrokeCell = null;
+    _strokeCells.clear();
+  }
+
   void _zoom(Offset focal, double scale) {
     final world = _world(focal);
     final next = scale.clamp(.000001, 60.0);
@@ -385,6 +423,7 @@ class _LifeViewportState extends State<LifeViewport> {
   @override
   Widget build(BuildContext context) {
     final block = context.select((ModelBoard m) => m.insertedBlock);
+    final drawing = _draw && block == null;
     return LayoutBuilder(
       builder: (context, constraints) {
         if (_size != constraints.biggest) {
@@ -445,26 +484,42 @@ class _LifeViewportState extends State<LifeViewport> {
                       behavior: HitTestBehavior.opaque,
                       onTapUp: (event) {
                         _focus.requestFocus();
-                        if (_draw || block != null) {
+                        if (block != null) {
                           final cell = _world(event.localPosition);
                           _model.edit(cell.dx.floor(), cell.dy.floor());
                         }
+                        _endStroke();
                       },
-                      onScaleStart: (event) {
-                        _startScale = _camera.value.$2;
-                        _anchor = _world(event.localFocalPoint);
-                      },
-                      onScaleUpdate: (event) {
-                        final scale = (_startScale * event.scale).clamp(
-                          .000001,
-                          60.0,
-                        );
-                        _camera.value = (
-                          event.localFocalPoint - _anchor * scale,
-                          scale,
-                          null,
-                        );
-                      },
+                      onPanDown: drawing
+                          ? (event) => _startStroke(event.localPosition)
+                          : null,
+                      onPanStart: drawing
+                          ? (event) => _drawTo(event.localPosition)
+                          : null,
+                      onPanUpdate: drawing
+                          ? (event) => _drawTo(event.localPosition)
+                          : null,
+                      onPanEnd: drawing ? (_) => _endStroke() : null,
+                      onPanCancel: drawing ? _endStroke : null,
+                      onScaleStart: drawing
+                          ? null
+                          : (event) {
+                              _startScale = _camera.value.$2;
+                              _anchor = _world(event.localFocalPoint);
+                            },
+                      onScaleUpdate: drawing
+                          ? null
+                          : (event) {
+                              final scale = (_startScale * event.scale).clamp(
+                                .000001,
+                                60.0,
+                              );
+                              _camera.value = (
+                                event.localFocalPoint - _anchor * scale,
+                                scale,
+                                null,
+                              );
+                            },
                       child: RepaintBoundary(
                         child: CustomPaint(
                           painter: LifePainter(_model, _camera),
@@ -586,12 +641,12 @@ class _LifeViewportState extends State<LifeViewport> {
                 ),
               ),
             ),
-            const Positioned(
+            Positioned(
               bottom: 22,
               left: 20,
               child: Text(
-                'DRAG TO EXPLORE',
-                style: TextStyle(
+                drawing ? 'DRAG TO DRAW' : 'DRAG TO EXPLORE',
+                style: const TextStyle(
                   fontSize: 8,
                   letterSpacing: 1.3,
                   color: Color(0xFF75816F),
