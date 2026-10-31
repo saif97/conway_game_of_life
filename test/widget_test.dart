@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:conway_game_of_life/core/view_model/model_board.dart';
 import 'package:conway_game_of_life/ui/screen_home.dart';
 import 'package:conway_game_of_life/ui/subscreen_board.dart';
@@ -6,9 +8,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_worker.dart';
 
-Future<ModelBoard> mount(WidgetTester tester) async {
+class GatedWorker extends FakeWorker {
+  Completer<void>? advanceGate;
+
+  @override
+  Future<Map<String, Object?>> request(Map<String, Object?> message) async {
+    if (message['command'] == 'advance') await advanceGate?.future;
+    return super.request(message);
+  }
+}
+
+Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
   addTearDown(() => tester.pumpWidget(const SizedBox()));
-  final model = ModelBoard(workerFactory: FakeWorker.new, demo: false);
+  final model = ModelBoard(
+    workerFactory: () => worker ?? FakeWorker(),
+    demo: false,
+  );
   await tester.pumpWidget(
     MaterialApp(
       theme: ThemeData.dark(),
@@ -20,6 +35,41 @@ Future<ModelBoard> mount(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('running status stays steady across worker requests', (
+    tester,
+  ) async {
+    final worker = GatedWorker();
+    final model = await mount(tester, worker: worker);
+    await tester.tap(find.text('Play'));
+    await tester.pump();
+    expect(find.text('Running'), findsOneWidget);
+
+    for (var i = 0; i < 3; i++) {
+      worker.advanceGate = Completer<void>();
+      await tester.pump(const Duration(milliseconds: 33));
+      expect(model.isBusy, isTrue);
+      expect(model.isPlaying, isTrue);
+      expect(find.text('Running'), findsOneWidget);
+
+      worker.advanceGate!.complete();
+      await tester.pump();
+      expect(model.isBusy, isFalse);
+      expect(find.text('Running'), findsOneWidget);
+    }
+
+    worker.advanceGate = Completer<void>();
+    await tester.pump(const Duration(milliseconds: 33));
+    await tester.tap(find.text('Pause'));
+    await tester.pump();
+    expect(
+      find.text('Finishing current operation · you can keep exploring'),
+      findsOneWidget,
+    );
+    worker.advanceGate!.complete();
+    await tester.pump();
+    expect(find.text('Paused · take a closer look'), findsOneWidget);
+  });
+
   testWidgets('draw, step, save and restore through the redesigned controls', (
     tester,
   ) async {

@@ -200,7 +200,7 @@ void main() {
       top: 0,
       right: 3,
       bottom: 3,
-      onSquare: (x, y, _) => visible.add((x, y)),
+      onSquare: (x, y, _, _) => visible.add((x, y)),
     );
     expect(visible, glider);
     var visits = 0;
@@ -210,7 +210,7 @@ void main() {
       right: 2000000,
       bottom: 2000000,
       minimumSize: u.root.size,
-      onSquare: (_, _, _) => visits++,
+      onSquare: (_, _, _, _) => visits++,
     );
     expect(visits, 1);
   });

@@ -192,7 +192,7 @@ final class HashlifeUniverse {
     required int right,
     required int bottom,
     int minimumSize = 1,
-    required void Function(int x, int y, int size) onSquare,
+    required void Function(int x, int y, int size, int population) onSquare,
   }) {
     void walk(Node n, int x, int y) {
       if (n.population == 0 ||
@@ -203,7 +203,7 @@ final class HashlifeUniverse {
         return;
       }
       if (n.depth == 0 || n.size <= minimumSize) {
-        onSquare(x, y, n.size);
+        onSquare(x, y, n.size, n.population);
         return;
       }
       final h = n.size ~/ 2;
@@ -223,7 +223,7 @@ final class HashlifeUniverse {
       top: _y,
       right: _x + _root.size,
       bottom: _y + _root.size,
-      onSquare: (x, y, _) => result.add((x, y)),
+      onSquare: (x, y, _, _) => result.add((x, y)),
     );
     return result;
   }

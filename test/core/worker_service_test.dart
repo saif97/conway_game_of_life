@@ -12,6 +12,42 @@ const glider = [
   [2, 2],
 ];
 void main() {
+  test('resolvable gliders keep their individual cells in a wide viewport', () {
+    final worker = WorkerService();
+    final frame = worker.handle({
+      'command': 'load',
+      'pattern': glider,
+      'view': [0, 0, 1200, 1200, 1],
+    });
+    final cells = frame['cells'] as List;
+    expect(cells[2], 1, reason: 'A visible cell must not become a large tile');
+    expect(cells.length, glider.length * 4);
+    expect(cells[3], 1);
+  });
+
+  test('zoomed-out tiles retain population density without changing Life', () {
+    final worker = WorkerService();
+    worker.handle({'command': 'load', 'pattern': glider, 'view': view});
+    final original = worker.universe.liveCells();
+    for (final detail in [8, 16, 1024]) {
+      final frame = worker.handle({
+        'command': 'frame',
+        'view': [-4096, -4096, 4096, 4096, detail],
+      });
+      final cells = frame['cells'] as List;
+      var representedPopulation = 0.0;
+      for (var i = 0; i < cells.length; i += 4) {
+        final size = cells[i + 2] as double;
+        final density = cells[i + 3] as double;
+        expect(size, lessThanOrEqualTo(detail));
+        expect(density, inExclusiveRange(0, 1));
+        representedPopulation += size * size * density;
+      }
+      expect(representedPopulation, glider.length);
+      expect(worker.universe.liveCells(), original);
+    }
+  });
+
   test('real isolate owns state, steps, saves and restores', () async {
     final worker = IsolateTransport();
     addTearDown(worker.dispose);
@@ -26,7 +62,7 @@ void main() {
     expect(result['cells'], isEmpty); // The glider left this viewport.
     final restored = await worker.request({'command': 'restore', 'view': view});
     expect(restored['generation'], 0);
-    expect((restored['cells'] as List).length, 15);
+    expect((restored['cells'] as List).length, 20);
   });
   test('worker errors do not silently discard the world', () async {
     final worker = IsolateTransport();
@@ -60,7 +96,7 @@ void main() {
       final population = worker.universe.population;
       final frame = worker.handle({
         'command': 'frame',
-        'view': [-1000, -1000, 1000, 1000, 1],
+        'view': [-1000, -1000, 1000, 1000, 16],
       });
       expect((frame['cells'] as List).length, lessThan(200000));
       expect(worker.universe.population, population);

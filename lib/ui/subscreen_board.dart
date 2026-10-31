@@ -288,12 +288,10 @@ class _Status extends StatelessWidget {
         Flexible(
           child: Text(
             textAlign: TextAlign.center,
-            busy
-                ? (playing
-                      ? 'Evolving · you can keep exploring'
-                      : 'Finishing current operation · you can keep exploring')
-                : playing
+            playing
                 ? 'Running'
+                : busy
+                ? 'Finishing current operation · you can keep exploring'
                 : 'Paused · take a closer look',
             style: const TextStyle(fontSize: 10, color: Color(0xFF9BA897)),
           ),
@@ -351,7 +349,7 @@ class _LifeViewportState extends State<LifeViewport> {
       (-offset.dy / scale).floor(),
       ((_size.width - offset.dx) / scale).ceil(),
       ((_size.height - offset.dy) / scale).ceil(),
-      max(1, (1 / scale).floor()),
+      max(1, (1 / (scale * View.of(context).devicePixelRatio)).floor()),
     ]);
   }
 
@@ -637,8 +635,8 @@ class LifePainter extends CustomPainter {
         canvas.drawLine(Offset(0, py), Offset(size.width, py), _grid);
       }
     }
-    final path = Path(), cells = model.cells;
-    for (var i = 0; i < cells.length; i += 3) {
+    final paths = List.generate(16, (_) => Path()), cells = model.cells;
+    for (var i = 0; i < cells.length; i += 4) {
       final side = cells[i + 2] * scale;
       final rect = Rect.fromLTWH(
         offset.dx + cells[i] * scale,
@@ -647,10 +645,18 @@ class LifePainter extends CustomPainter {
         side,
       );
       if (rect.overlaps(Offset.zero & size)) {
-        path.addRect(scale >= 7 && cells[i + 2] == 1 ? rect.deflate(.6) : rect);
+        // A square-root curve keeps sparse subpixel patterns visible without
+        // giving them the same brightness as solid living regions.
+        final shade = (sqrt(cells[i + 3]) * 16).ceil().clamp(1, 16) - 1;
+        paths[shade].addRect(
+          scale >= 7 && cells[i + 2] == 1 ? rect.deflate(.6) : rect,
+        );
       }
     }
-    canvas.drawPath(path, _cells);
+    for (var i = 0; i < paths.length; i++) {
+      _cells.color = lime.withValues(alpha: (i + 1) / paths.length);
+      canvas.drawPath(paths[i], _cells);
+    }
     final block = model.insertedBlock;
     if (block != null && hover != null) {
       for (var x = 0; x < block.matrixBlock.length; x++) {

@@ -37,9 +37,13 @@ workloads. This change prioritizes the existing expanding-pattern simulator.
 Unlike the old implementation, rendering never allocates a full rectangular
 world or stores one Rect for every possible cell. Traversal rejects empty and
 out-of-view nodes, and aggregates occupied subtrees once they are smaller than a
-screen pixel or the bounded frame detail (at most roughly 256 squares across). This aggregation affects display only, never simulation. A single
+physical screen pixel, with a safety cap of roughly 4096 squares across for
+unusually large views. Each displayed square carries its live-cell density;
+sparse subpixel regions use a square-root brightness curve rather than solid
+lime blocks. This aggregation affects display only, never simulation. A single
 viewport-sized CustomPainter listens directly for changes and batches visible
-squares into a path. Grid work scales with visible lines, not total board area.
+squares into brightness paths. Grid work scales with visible lines, not total
+board area.
 
 ### Verification
 
@@ -99,7 +103,7 @@ hosting configuration is removed; an existing Firebase deployment is unaffected.
 
 A persistent dedicated web worker owns the universe, caches, snapshots, evolution,
 and viewport traversal. Flutter receives only statistics and a transferable
-Float64Array of visible square coordinates and sizes. The worker uses Wasm when
+Float64Array of visible squares (x, y, side length, density). The worker uses Wasm when
 the Flutter application uses Wasm, and JavaScript with the fallback application.
 The bootstrap URL respects the application's base path. Native tests use a real
 Dart isolate; synchronous service transports exist only in tests.

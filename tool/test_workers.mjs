@@ -47,7 +47,11 @@ for (const wasm of [false, true]) {
     const result = await request('advance', {exponent:20, view:[262140,262140,262150,262150,1]});
     assert.equal(result.generation,1048576);
     const actual = [];
-    for (let i=0;i<result.cells.length;i+=3) actual.push([result.cells[i], result.cells[i+1]]);
+    for (let i=0;i<result.cells.length;i+=4) {
+      actual.push([result.cells[i], result.cells[i+1]]);
+      assert.equal(result.cells[i+2], 1);
+      assert.equal(result.cells[i+3], 1);
+    }
     assert.deepEqual(actual.sort(), glider.map(([x,y])=>[x+262144,y+262144]).sort());
     assert.equal((await request('restore')).generation,0);
     await assert.rejects(request('unknown'), /Unknown/);
