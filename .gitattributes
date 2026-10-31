@@ -1,0 +1,2 @@
+# Keep downloaded RLE bytes and source hashes intact, including upstream whitespace.
+assets/patterns/*.rle -text -whitespace

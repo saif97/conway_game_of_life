@@ -14,8 +14,10 @@ flutter run -d chrome --wasm
 ```
 
 Turn on Draw to toggle cells, drag to pan, and scroll/pinch to zoom. Search the
-pattern library (drawer on narrow screens): click a card to load a new world, or
-choose Place in world to insert it into the current world. Escape cancels placement. Step always advances one generation; the generations/tick
+37-pattern library (drawer on narrow screens): expand a family, search across
+all families, or sort names A–Z. Click a card or Load world to start a new world,
+or choose Place to insert it into the current world. The info button offers
+experiment tips and source credits. Escape cancels placement. Step always advances one generation; the generations/tick
 control changes playback jumps (up to 1,048,576 generations). Jump applies one
 selected jump while paused. Random seed area controls the initial random
 square, not a fixed boundary. Save/Restore keeps a snapshot in memory.
@@ -29,6 +31,12 @@ The side panel shows rendered Flutter FPS and memory in MiB (also available in
 the mobile drawer). FPS drops when idle. Memory uses the browser’s page-and-worker
 estimate when available, otherwise a clearly labeled partial JS heap estimate or
 “Unavailable”; it is not total process RAM. Hover the metrics for details.
+
+Patterns come from Golly and its Life Lexicon, ranging from simple still lifes
+through breeders, memory circuits, and a Turing machine. They are bundled as
+RLE files and load on demand using sparse coordinates. See
+[the library and adding patterns](docs/pattern-library.md) and
+[third-party pattern credits](assets/patterns/NOTICE.md).
 
 ## Verify and build
 

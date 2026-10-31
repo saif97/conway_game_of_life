@@ -714,19 +714,15 @@ class LifePainter extends CustomPainter {
     }
     final block = model.insertedBlock;
     if (block != null && hover != null) {
-      for (var x = 0; x < block.matrixBlock.length; x++) {
-        for (var y = 0; y < block.matrixBlock[x].length; y++) {
-          if (block.matrixBlock[x][y]) {
-            canvas.drawRect(
-              Rect.fromLTWH(
-                offset.dx + (hover.dx.floor() + x) * scale,
-                offset.dy + (hover.dy.floor() + y) * scale,
-                scale,
-                scale,
-              ),
-              _preview,
-            );
-          }
+      for (final (x, y) in block.liveCells) {
+        final rect = Rect.fromLTWH(
+          offset.dx + (hover.dx.floor() + x) * scale,
+          offset.dy + (hover.dy.floor() + y) * scale,
+          scale,
+          scale,
+        );
+        if (rect.overlaps(Offset.zero & size)) {
+          canvas.drawRect(rect, _preview);
         }
       }
     }
