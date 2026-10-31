@@ -9,6 +9,28 @@ import '../support/reference_life.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test(
+    'counter playback retains reusable futures between large jumps',
+    () async {
+      final catalog = await PatternCatalog.load();
+      final entry = catalog.patterns.singleWhere(
+        (e) => e.id == 'hexadecimal-counter',
+      );
+      final block = await catalog.loadPattern(entry);
+      final universe = HashlifeUniverse()..loadTree(block.tree!);
+      for (final population in [299568, 320552]) {
+        universe.advance(exponent: 15);
+        expect(universe.population, population);
+        expect(universe.cachedResults, greaterThan(0));
+        expect(universe.cacheCollections, 0);
+      }
+      expect(universe.generation, 65536);
+      universe.restore();
+      expect(universe.population, 328591);
+      expect(universe.generation, 0);
+    },
+  );
+
   test('every catalog asset decodes, has credits, and can seed HashLife', () async {
     final catalog = await PatternCatalog.load();
     expect(catalog.patterns.length, greaterThanOrEqualTo(37));

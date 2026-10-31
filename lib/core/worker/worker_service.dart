@@ -82,6 +82,11 @@ class WorkerService {
       'population': universe.population,
       'elapsedUs': elapsed,
       'nodes': universe.cachedNodes,
+      'results': universe.cachedResults,
+      'cacheLimit': universe.cacheLimit,
+      'cacheCollections': universe.cacheCollections,
+      'cacheEntriesBeforeLastCollection':
+          universe.cacheEntriesBeforeLastCollection,
       'detail': detail,
       'cells': Float64List.fromList(cells),
     };

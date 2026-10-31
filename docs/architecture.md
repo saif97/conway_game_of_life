@@ -21,7 +21,8 @@ workloads. This change prioritizes the existing expanding-pattern simulator.
 - A node at depth d represents a square of side 2^d. Branches are interned by
   their four canonical child identities, without recursive equality.
 - A successor returns the central half after exactly 2^k generations, where
-  k <= d-2. Its cache key contains both the node and k.
+  k <= d-2. Each node has one successor memo tagged with k; a different exponent
+  recomputes and replaces that memo. Tree contents stay immutable.
 - Nine overlapping subregions are evolved and recombined. At the maximum jump,
   a second recursive evolution supplies the second half of the elapsed time;
   smaller jumps only extract the centers at that stage.
@@ -30,9 +31,16 @@ workloads. This change prioritizes the existing expanding-pattern simulator.
   than one cell/generation, so the returned central half retains every birth.
 - Generation accounting happens once at the public API boundary.
 - Save/restore retains immutable roots, world origins and generation counts.
+- Branch interning uses an open-addressed table with child identity checks and
+  cached hashes. Lookups allocate neither record keys nor factory closures.
 - Cache collection drops historical results and re-interns the current and saved
-  DAGs. The 200,000-entry threshold is a soft collection trigger, not a hard
-  memory budget: a single jump and reachable live state can exceed it.
+  DAGs. The default 8,000,000-entry threshold counts nodes plus populated memos;
+  it is a soft collection trigger, not bytes or a hard memory budget. A single
+  jump and reachable live state can exceed it. The counter creates over four
+  million entries on its first 32,768-generation jump, so the old 200,000-entry
+  threshold discarded all futures after each jump. Compact storage and a larger
+  finite budget let later jumps reuse them. Explicit smaller `cacheLimit` values
+  remain supported and covered by collection tests.
 
 Unlike the old implementation, rendering never allocates a full rectangular
 world or stores one Rect for every possible cell. Traversal rejects empty and
@@ -67,6 +75,12 @@ not representative of every animation tick. The same file can be compiled to
 JavaScript and Wasm. Measure a release build on target devices before claiming
 end-to-end speedups or a universal winner; JIT/VM measurements are not browser
 benchmarks.
+
+For large-pattern playback, use `node tool/benchmark_workers.mjs` after building
+the workers. It runs consecutive jumps through the actual JS/Wasm worker
+bootstrap, records per-jump timings and cache counts, checks state signatures,
+and can capture CPU profiles in the worker. See [benchmark commands and
+measurement limits](performance.md) and [Golly/lifelib research](performance-research.md).
 
 ## Choice: Flutter WebAssembly with JavaScript fallback
 

@@ -1,0 +1,788 @@
+{
+  "date": "2026-10-31",
+  "baselineCommit": "d850236",
+  "candidate": "working tree: compact node interning, node-local successor memos, 8-million-entry soft cache limit",
+  "measurement": "production Wasm worker in Node; simulation only, includes cache maintenance, excludes loading and viewport extraction",
+  "independentSamplesPerBuild": 1,
+  "config": {
+    "targets": [
+      "wasm"
+    ],
+    "patterns": [
+      "hexadecimal-counter"
+    ],
+    "exponent": 15,
+    "jumps": 32,
+    "samples": 1,
+    "view": null,
+    "randomSize": 64,
+    "seed": 42,
+    "density": 0.25,
+    "profiled": false,
+    "sampleMemory": true
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "v8": "13.6.233.17-node.53",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC",
+    "cpuCount": 32
+  },
+  "fixture": {
+    "name": "hexadecimal-counter",
+    "sha256": "938e3b324e1e29c852b37165b2bedbfd9e8a60f4c1367bfd704a82e4b8dad6c5",
+    "initialPopulation": 328591
+  },
+  "stateSignaturesMatch": true,
+  "before": {
+    "workerHashes": {
+      "life_worker_bootstrap.js": "5618faa5f56e3c9136e59b94f946fc73145f895b2a59e43e2ecf6bc7d0762246",
+      "life_worker.wasm": "d10cd16d22c338ecf9d12f1d72b1c7344fbb2a2d8852322bb145c2639d851cef",
+      "life_worker.mjs": "18a35350555285084d37841a6ad46dc6dc213825c834e08e1afdf0f04a417230",
+      "life_worker.support.js": "9b329fbb5f775a8c37a85ede978db00aa0e9543edbadb520c2f1fb0aac403140"
+    },
+    "totalSimulationSeconds": 340.259472,
+    "summary": {
+      "pattern": "hexadecimal-counter",
+      "target": "wasm",
+      "simulationUs": {
+        "count": 32,
+        "median": 10385201,
+        "p95": 13125511,
+        "min": 9431341,
+        "max": 13238348
+      },
+      "roundTripUs": {
+        "count": 32,
+        "median": 10386843.159999989,
+        "p95": 13126508.943000007,
+        "min": 9432259.618000012,
+        "max": 13239355.807999993
+      },
+      "otherUs": {
+        "count": 32,
+        "median": 1253.6420000111684,
+        "p95": 2489.639999980107,
+        "min": 904.5819999724627,
+        "max": 2632.889000002295
+      },
+      "firstJumpSimulationUs": {
+        "count": 1,
+        "median": 11389339,
+        "p95": 11389339,
+        "min": 11389339,
+        "max": 11389339
+      },
+      "finalQuarterSimulationUs": {
+        "count": 8,
+        "median": 10336225.5,
+        "p95": 13036635,
+        "min": 9431341,
+        "max": 13036635
+      },
+      "maxNodes": 56973,
+      "maxResults": null,
+      "maxCacheCollections": null,
+      "maxWorkerHeapUsedBytes": 1353197872
+    },
+    "processPeakRssKiB": 1803608,
+    "jumps": [
+      {
+        "jump": 1,
+        "simulationUs": 11389339,
+        "signature": {
+          "generation": 32768,
+          "population": 299568,
+          "tupleCount": 4957,
+          "viewportSha256": "fa65b4c48b31d29a7921bf45818162decd65dd54d727c5cb4f6569b53c7bf753"
+        }
+      },
+      {
+        "jump": 2,
+        "simulationUs": 10780228,
+        "signature": {
+          "generation": 65536,
+          "population": 320552,
+          "tupleCount": 5377,
+          "viewportSha256": "b07fb1b7d03fd78cca9c363291d799710fe068c77c3e7822b32a0ec8f58460e6"
+        }
+      },
+      {
+        "jump": 3,
+        "simulationUs": 10180045,
+        "signature": {
+          "generation": 98304,
+          "population": 315513,
+          "tupleCount": 5309,
+          "viewportSha256": "d39ab272a3358de093f7aa65491405d39201c93a33bf937660db7604b6261c6c"
+        }
+      },
+      {
+        "jump": 4,
+        "simulationUs": 10540378,
+        "signature": {
+          "generation": 131072,
+          "population": 321210,
+          "tupleCount": 5357,
+          "viewportSha256": "de5acd91702752b6c82b7f45f6499d6c6edf1c9be4d3fa6328eeba1bace6b248"
+        }
+      },
+      {
+        "jump": 5,
+        "simulationUs": 12178670,
+        "signature": {
+          "generation": 163840,
+          "population": 315464,
+          "tupleCount": 5204,
+          "viewportSha256": "26d0cb44ed0dc3eb8ae1e7d9e25669eec39abd5650a78af422d209259cbe12b3"
+        }
+      },
+      {
+        "jump": 6,
+        "simulationUs": 10361624,
+        "signature": {
+          "generation": 196608,
+          "population": 314530,
+          "tupleCount": 5325,
+          "viewportSha256": "225d4b96854548a223c1467846f81a64d180b27e37fbeb18df0163a03c0b85cc"
+        }
+      },
+      {
+        "jump": 7,
+        "simulationUs": 10372557,
+        "signature": {
+          "generation": 229376,
+          "population": 323234,
+          "tupleCount": 5445,
+          "viewportSha256": "2d58b686d569c676afeae882297d3bdb272402c32903cedd8f9ac177e7012b0b"
+        }
+      },
+      {
+        "jump": 8,
+        "simulationUs": 10380607,
+        "signature": {
+          "generation": 262144,
+          "population": 309598,
+          "tupleCount": 5107,
+          "viewportSha256": "94784fd9aabbfdae4d05669bbd4feafb88fcc74a02268833c08d2fc4b45ff208"
+        }
+      },
+      {
+        "jump": 9,
+        "simulationUs": 13125511,
+        "signature": {
+          "generation": 294912,
+          "population": 321426,
+          "tupleCount": 5592,
+          "viewportSha256": "be6da713bbf255f9f4079dec0b8ec8577182804468ab39858ab8e2ecc9498cb2"
+        }
+      },
+      {
+        "jump": 10,
+        "simulationUs": 9460935,
+        "signature": {
+          "generation": 327680,
+          "population": 327414,
+          "tupleCount": 5460,
+          "viewportSha256": "16fabaf4d18d53917118ad098b62ce3f7d714cca5b5f7570007b1866f7b7d4b2"
+        }
+      },
+      {
+        "jump": 11,
+        "simulationUs": 9850045,
+        "signature": {
+          "generation": 360448,
+          "population": 331400,
+          "tupleCount": 5505,
+          "viewportSha256": "82e8caca467e74c7480f9acced97c39256defeeffe4ea4c7bcecd0fa55f75de9"
+        }
+      },
+      {
+        "jump": 12,
+        "simulationUs": 9704846,
+        "signature": {
+          "generation": 393216,
+          "population": 313353,
+          "tupleCount": 5439,
+          "viewportSha256": "eaf9e11e5a00328c3748584ab404f84d559dd0533c833394b20869240390d184"
+        }
+      },
+      {
+        "jump": 13,
+        "simulationUs": 10503677,
+        "signature": {
+          "generation": 425984,
+          "population": 323173,
+          "tupleCount": 5351,
+          "viewportSha256": "f972a9be852c7cdd151c7eace8cc3a09e567ceccaee564da2d33c63767e3dd6c"
+        }
+      },
+      {
+        "jump": 14,
+        "simulationUs": 10489954,
+        "signature": {
+          "generation": 458752,
+          "population": 320132,
+          "tupleCount": 5234,
+          "viewportSha256": "9ca5b3f7f64ff9f770631e4da154dbcb487bccdf12ba8426f256178693304f72"
+        }
+      },
+      {
+        "jump": 15,
+        "simulationUs": 10506966,
+        "signature": {
+          "generation": 491520,
+          "population": 310354,
+          "tupleCount": 5352,
+          "viewportSha256": "73dd88fe23433d801d8667991d7cb660423ef530d7a60eec580031f8dac35a63"
+        }
+      },
+      {
+        "jump": 16,
+        "simulationUs": 10811543,
+        "signature": {
+          "generation": 524288,
+          "population": 328264,
+          "tupleCount": 5323,
+          "viewportSha256": "c362270649e96b14a32dc9698d43e8bdc4f7727c9a41bfa7cf0af5f3a88a4f94"
+        }
+      },
+      {
+        "jump": 17,
+        "simulationUs": 9644307,
+        "signature": {
+          "generation": 557056,
+          "population": 317181,
+          "tupleCount": 5197,
+          "viewportSha256": "b53be4ff6b2ea7ba5d46fc876f91e0c4d6d91b578766381e5cc8a4f3eb482491"
+        }
+      },
+      {
+        "jump": 18,
+        "simulationUs": 13238348,
+        "signature": {
+          "generation": 589824,
+          "population": 318538,
+          "tupleCount": 5354,
+          "viewportSha256": "b47f44fa7aba7a25d079748b53b0949a27a330f6c69d054ffbdbc5d36c09ea3a"
+        }
+      },
+      {
+        "jump": 19,
+        "simulationUs": 11925490,
+        "signature": {
+          "generation": 622592,
+          "population": 282516,
+          "tupleCount": 4461,
+          "viewportSha256": "f7abb6a2ec7234dec48fc258c3f05cc3a689945d453a585258a2e6f2d85576dd"
+        }
+      },
+      {
+        "jump": 20,
+        "simulationUs": 10615490,
+        "signature": {
+          "generation": 655360,
+          "population": 295932,
+          "tupleCount": 4903,
+          "viewportSha256": "e3345fb539d94fa1e0debdbc127b2d25419c89a3d0ce4b5e6b9d35369162265f"
+        }
+      },
+      {
+        "jump": 21,
+        "simulationUs": 9872547,
+        "signature": {
+          "generation": 688128,
+          "population": 293889,
+          "tupleCount": 4825,
+          "viewportSha256": "99f247ab2598db88c3a3df65b7b4a810f0a4ae4b00ce9612f863914df1a6a344"
+        }
+      },
+      {
+        "jump": 22,
+        "simulationUs": 10429488,
+        "signature": {
+          "generation": 720896,
+          "population": 296618,
+          "tupleCount": 4884,
+          "viewportSha256": "4b0e419433aa965016213d21ac14c3847fa6e60e85e4c4d7c7d57288d84e01d4"
+        }
+      },
+      {
+        "jump": 23,
+        "simulationUs": 10626302,
+        "signature": {
+          "generation": 753664,
+          "population": 293942,
+          "tupleCount": 4711,
+          "viewportSha256": "13020921d2efc29e30053053a39ce71a7777a94439d9dcfea044dde7df72208f"
+        }
+      },
+      {
+        "jump": 24,
+        "simulationUs": 10107984,
+        "signature": {
+          "generation": 786432,
+          "population": 293080,
+          "tupleCount": 4836,
+          "viewportSha256": "d2add7a853531b8b8fc027c033567f5b239bb3afc8ca6dfaffd6e1e79f36baac"
+        }
+      },
+      {
+        "jump": 25,
+        "simulationUs": 10361198,
+        "signature": {
+          "generation": 819200,
+          "population": 298720,
+          "tupleCount": 4951,
+          "viewportSha256": "9cf6773a7d5a5ebf7b2b6309a2f437f651b60bc5aee1ae862639bb19b6d0b0b5"
+        }
+      },
+      {
+        "jump": 26,
+        "simulationUs": 10352953,
+        "signature": {
+          "generation": 851968,
+          "population": 282407,
+          "tupleCount": 4617,
+          "viewportSha256": "243b431d3f7ebb2a274bc401b9f24f2bde6c4a78dc70977e6f0e3530a107ef47"
+        }
+      },
+      {
+        "jump": 27,
+        "simulationUs": 13036635,
+        "signature": {
+          "generation": 884736,
+          "population": 308241,
+          "tupleCount": 5093,
+          "viewportSha256": "0072b50133998749669ecca46f60e1646c191b2c44efeeddc0e8c9688f715075"
+        }
+      },
+      {
+        "jump": 28,
+        "simulationUs": 9431341,
+        "signature": {
+          "generation": 917504,
+          "population": 302540,
+          "tupleCount": 4971,
+          "viewportSha256": "387f87f967d55aeb429ff258f55be16f2c519a5e4484730d964ff60d37bb5416"
+        }
+      },
+      {
+        "jump": 29,
+        "simulationUs": 9796714,
+        "signature": {
+          "generation": 950272,
+          "population": 297303,
+          "tupleCount": 4973,
+          "viewportSha256": "3ecfa8a56388792c543d29304b22972dc5a693baf89508f3488f52d36052cf02"
+        }
+      },
+      {
+        "jump": 30,
+        "simulationUs": 9474457,
+        "signature": {
+          "generation": 983040,
+          "population": 296431,
+          "tupleCount": 4948,
+          "viewportSha256": "9be64f06d83b86e0c37f078b0fd28c5bb5f4f8c6bb335cf8994296e3745448a7"
+        }
+      },
+      {
+        "jump": 31,
+        "simulationUs": 10389795,
+        "signature": {
+          "generation": 1015808,
+          "population": 295307,
+          "tupleCount": 4840,
+          "viewportSha256": "f3a345abc9ac017f98100a92fd274848511f04042c871a6a6bdc2591100de80b"
+        }
+      },
+      {
+        "jump": 32,
+        "simulationUs": 10319498,
+        "signature": {
+          "generation": 1048576,
+          "population": 281726,
+          "tupleCount": 4794,
+          "viewportSha256": "b8515fd776efdb4bee4ac2a95a59523ac719f681a6872bf240c53a8387ed4079"
+        }
+      }
+    ]
+  },
+  "after": {
+    "workerHashes": {
+      "life_worker_bootstrap.js": "5618faa5f56e3c9136e59b94f946fc73145f895b2a59e43e2ecf6bc7d0762246",
+      "life_worker.wasm": "f7ed77eb634ec9beaf358d988e0c8cb33a9ee6c4f1d5e2338b490be0d613abd6",
+      "life_worker.mjs": "75768c92f4d564bb3261c70a9278e2f281f6795a6717471235dfb20fa683b6d2",
+      "life_worker.support.js": "9b329fbb5f775a8c37a85ede978db00aa0e9543edbadb520c2f1fb0aac403140"
+    },
+    "totalSimulationSeconds": 9.301983,
+    "summary": {
+      "pattern": "hexadecimal-counter",
+      "target": "wasm",
+      "simulationUs": {
+        "count": 32,
+        "median": 93776.5,
+        "p95": 599680,
+        "min": 2835,
+        "max": 4399372
+      },
+      "roundTripUs": {
+        "count": 32,
+        "median": 96033.17849999893,
+        "p95": 600876.9659999998,
+        "min": 4980.967000001328,
+        "max": 4402688.8209999995
+      },
+      "otherUs": {
+        "count": 32,
+        "median": 2181.7879999994693,
+        "p95": 3316.8209999995306,
+        "min": 1173.4479999989853,
+        "max": 3399.218999999677
+      },
+      "firstJumpSimulationUs": {
+        "count": 1,
+        "median": 4399372,
+        "p95": 4399372,
+        "min": 4399372,
+        "max": 4399372
+      },
+      "finalQuarterSimulationUs": {
+        "count": 8,
+        "median": 3227,
+        "p95": 3865,
+        "min": 2835,
+        "max": 3865
+      },
+      "maxNodes": 3698351,
+      "maxResults": 3698181,
+      "maxCacheCollections": 0,
+      "maxWorkerHeapUsedBytes": 633508584
+    },
+    "processPeakRssKiB": 846248,
+    "jumps": [
+      {
+        "jump": 1,
+        "simulationUs": 4399372,
+        "signature": {
+          "generation": 32768,
+          "population": 299568,
+          "tupleCount": 4957,
+          "viewportSha256": "fa65b4c48b31d29a7921bf45818162decd65dd54d727c5cb4f6569b53c7bf753"
+        }
+      },
+      {
+        "jump": 2,
+        "simulationUs": 518993,
+        "signature": {
+          "generation": 65536,
+          "population": 320552,
+          "tupleCount": 5377,
+          "viewportSha256": "b07fb1b7d03fd78cca9c363291d799710fe068c77c3e7822b32a0ec8f58460e6"
+        }
+      },
+      {
+        "jump": 3,
+        "simulationUs": 299488,
+        "signature": {
+          "generation": 98304,
+          "population": 315513,
+          "tupleCount": 5309,
+          "viewportSha256": "d39ab272a3358de093f7aa65491405d39201c93a33bf937660db7604b6261c6c"
+        }
+      },
+      {
+        "jump": 4,
+        "simulationUs": 269613,
+        "signature": {
+          "generation": 131072,
+          "population": 321210,
+          "tupleCount": 5357,
+          "viewportSha256": "de5acd91702752b6c82b7f45f6499d6c6edf1c9be4d3fa6328eeba1bace6b248"
+        }
+      },
+      {
+        "jump": 5,
+        "simulationUs": 246179,
+        "signature": {
+          "generation": 163840,
+          "population": 315464,
+          "tupleCount": 5204,
+          "viewportSha256": "26d0cb44ed0dc3eb8ae1e7d9e25669eec39abd5650a78af422d209259cbe12b3"
+        }
+      },
+      {
+        "jump": 6,
+        "simulationUs": 325106,
+        "signature": {
+          "generation": 196608,
+          "population": 314530,
+          "tupleCount": 5325,
+          "viewportSha256": "225d4b96854548a223c1467846f81a64d180b27e37fbeb18df0163a03c0b85cc"
+        }
+      },
+      {
+        "jump": 7,
+        "simulationUs": 237826,
+        "signature": {
+          "generation": 229376,
+          "population": 323234,
+          "tupleCount": 5445,
+          "viewportSha256": "2d58b686d569c676afeae882297d3bdb272402c32903cedd8f9ac177e7012b0b"
+        }
+      },
+      {
+        "jump": 8,
+        "simulationUs": 178555,
+        "signature": {
+          "generation": 262144,
+          "population": 309598,
+          "tupleCount": 5107,
+          "viewportSha256": "94784fd9aabbfdae4d05669bbd4feafb88fcc74a02268833c08d2fc4b45ff208"
+        }
+      },
+      {
+        "jump": 9,
+        "simulationUs": 567428,
+        "signature": {
+          "generation": 294912,
+          "population": 321426,
+          "tupleCount": 5592,
+          "viewportSha256": "be6da713bbf255f9f4079dec0b8ec8577182804468ab39858ab8e2ecc9498cb2"
+        }
+      },
+      {
+        "jump": 10,
+        "simulationUs": 57076,
+        "signature": {
+          "generation": 327680,
+          "population": 327414,
+          "tupleCount": 5460,
+          "viewportSha256": "16fabaf4d18d53917118ad098b62ce3f7d714cca5b5f7570007b1866f7b7d4b2"
+        }
+      },
+      {
+        "jump": 11,
+        "simulationUs": 83619,
+        "signature": {
+          "generation": 360448,
+          "population": 331400,
+          "tupleCount": 5505,
+          "viewportSha256": "82e8caca467e74c7480f9acced97c39256defeeffe4ea4c7bcecd0fa55f75de9"
+        }
+      },
+      {
+        "jump": 12,
+        "simulationUs": 88959,
+        "signature": {
+          "generation": 393216,
+          "population": 313353,
+          "tupleCount": 5439,
+          "viewportSha256": "eaf9e11e5a00328c3748584ab404f84d559dd0533c833394b20869240390d184"
+        }
+      },
+      {
+        "jump": 13,
+        "simulationUs": 483863,
+        "signature": {
+          "generation": 425984,
+          "population": 323173,
+          "tupleCount": 5351,
+          "viewportSha256": "f972a9be852c7cdd151c7eace8cc3a09e567ceccaee564da2d33c63767e3dd6c"
+        }
+      },
+      {
+        "jump": 14,
+        "simulationUs": 154751,
+        "signature": {
+          "generation": 458752,
+          "population": 320132,
+          "tupleCount": 5234,
+          "viewportSha256": "9ca5b3f7f64ff9f770631e4da154dbcb487bccdf12ba8426f256178693304f72"
+        }
+      },
+      {
+        "jump": 15,
+        "simulationUs": 98594,
+        "signature": {
+          "generation": 491520,
+          "population": 310354,
+          "tupleCount": 5352,
+          "viewportSha256": "73dd88fe23433d801d8667991d7cb660423ef530d7a60eec580031f8dac35a63"
+        }
+      },
+      {
+        "jump": 16,
+        "simulationUs": 193609,
+        "signature": {
+          "generation": 524288,
+          "population": 328264,
+          "tupleCount": 5323,
+          "viewportSha256": "c362270649e96b14a32dc9698d43e8bdc4f7727c9a41bfa7cf0af5f3a88a4f94"
+        }
+      },
+      {
+        "jump": 17,
+        "simulationUs": 133614,
+        "signature": {
+          "generation": 557056,
+          "population": 317181,
+          "tupleCount": 5197,
+          "viewportSha256": "b53be4ff6b2ea7ba5d46fc876f91e0c4d6d91b578766381e5cc8a4f3eb482491"
+        }
+      },
+      {
+        "jump": 18,
+        "simulationUs": 599680,
+        "signature": {
+          "generation": 589824,
+          "population": 318538,
+          "tupleCount": 5354,
+          "viewportSha256": "b47f44fa7aba7a25d079748b53b0949a27a330f6c69d054ffbdbc5d36c09ea3a"
+        }
+      },
+      {
+        "jump": 19,
+        "simulationUs": 319908,
+        "signature": {
+          "generation": 622592,
+          "population": 282516,
+          "tupleCount": 4461,
+          "viewportSha256": "f7abb6a2ec7234dec48fc258c3f05cc3a689945d453a585258a2e6f2d85576dd"
+        }
+      },
+      {
+        "jump": 20,
+        "simulationUs": 4810,
+        "signature": {
+          "generation": 655360,
+          "population": 295932,
+          "tupleCount": 4903,
+          "viewportSha256": "e3345fb539d94fa1e0debdbc127b2d25419c89a3d0ce4b5e6b9d35369162265f"
+        }
+      },
+      {
+        "jump": 21,
+        "simulationUs": 4149,
+        "signature": {
+          "generation": 688128,
+          "population": 293889,
+          "tupleCount": 4825,
+          "viewportSha256": "99f247ab2598db88c3a3df65b7b4a810f0a4ae4b00ce9612f863914df1a6a344"
+        }
+      },
+      {
+        "jump": 22,
+        "simulationUs": 3259,
+        "signature": {
+          "generation": 720896,
+          "population": 296618,
+          "tupleCount": 4884,
+          "viewportSha256": "4b0e419433aa965016213d21ac14c3847fa6e60e85e4c4d7c7d57288d84e01d4"
+        }
+      },
+      {
+        "jump": 23,
+        "simulationUs": 3599,
+        "signature": {
+          "generation": 753664,
+          "population": 293942,
+          "tupleCount": 4711,
+          "viewportSha256": "13020921d2efc29e30053053a39ce71a7777a94439d9dcfea044dde7df72208f"
+        }
+      },
+      {
+        "jump": 24,
+        "simulationUs": 3423,
+        "signature": {
+          "generation": 786432,
+          "population": 293080,
+          "tupleCount": 4836,
+          "viewportSha256": "d2add7a853531b8b8fc027c033567f5b239bb3afc8ca6dfaffd6e1e79f36baac"
+        }
+      },
+      {
+        "jump": 25,
+        "simulationUs": 3798,
+        "signature": {
+          "generation": 819200,
+          "population": 298720,
+          "tupleCount": 4951,
+          "viewportSha256": "9cf6773a7d5a5ebf7b2b6309a2f437f651b60bc5aee1ae862639bb19b6d0b0b5"
+        }
+      },
+      {
+        "jump": 26,
+        "simulationUs": 3865,
+        "signature": {
+          "generation": 851968,
+          "population": 282407,
+          "tupleCount": 4617,
+          "viewportSha256": "243b431d3f7ebb2a274bc401b9f24f2bde6c4a78dc70977e6f0e3530a107ef47"
+        }
+      },
+      {
+        "jump": 27,
+        "simulationUs": 3663,
+        "signature": {
+          "generation": 884736,
+          "population": 308241,
+          "tupleCount": 5093,
+          "viewportSha256": "0072b50133998749669ecca46f60e1646c191b2c44efeeddc0e8c9688f715075"
+        }
+      },
+      {
+        "jump": 28,
+        "simulationUs": 3012,
+        "signature": {
+          "generation": 917504,
+          "population": 302540,
+          "tupleCount": 4971,
+          "viewportSha256": "387f87f967d55aeb429ff258f55be16f2c519a5e4484730d964ff60d37bb5416"
+        }
+      },
+      {
+        "jump": 29,
+        "simulationUs": 2835,
+        "signature": {
+          "generation": 950272,
+          "population": 297303,
+          "tupleCount": 4973,
+          "viewportSha256": "3ecfa8a56388792c543d29304b22972dc5a693baf89508f3488f52d36052cf02"
+        }
+      },
+      {
+        "jump": 30,
+        "simulationUs": 3123,
+        "signature": {
+          "generation": 983040,
+          "population": 296431,
+          "tupleCount": 4948,
+          "viewportSha256": "9be64f06d83b86e0c37f078b0fd28c5bb5f4f8c6bb335cf8994296e3745448a7"
+        }
+      },
+      {
+        "jump": 31,
+        "simulationUs": 3331,
+        "signature": {
+          "generation": 1015808,
+          "population": 295307,
+          "tupleCount": 4840,
+          "viewportSha256": "f3a345abc9ac017f98100a92fd274848511f04042c871a6a6bdc2591100de80b"
+        }
+      },
+      {
+        "jump": 32,
+        "simulationUs": 2883,
+        "signature": {
+          "generation": 1048576,
+          "population": 281726,
+          "tupleCount": 4794,
+          "viewportSha256": "b8515fd776efdb4bee4ac2a95a59523ac719f681a6872bf240c53a8387ed4079"
+        }
+      }
+    ]
+  }
+}

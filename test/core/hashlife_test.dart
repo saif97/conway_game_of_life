@@ -188,6 +188,63 @@ void main() {
     },
   );
 
+  test('mixed jumps remain exact through repeated cache collections', () {
+    final random = Random(2026);
+    final initial = {
+      for (var y = -16; y < 16; y++)
+        for (var x = -16; x < 16; x++)
+          if (random.nextBool()) (x, y),
+    };
+    final u = seeded(initial, cacheLimit: 2000)..save();
+    var expected = initial;
+    final collections = u.cacheCollections;
+    for (final exponent in [3, 0, 2, 4, 0, 3, 1]) {
+      for (var i = 0; i < 1 << exponent; i++) {
+        expected = referenceStep(expected);
+      }
+      u.advance(exponent: exponent);
+      expect(u.liveCells(), expected);
+    }
+    expect(u.cacheCollections - collections, greaterThan(1));
+    expect(u.cacheEntriesBeforeLastCollection, greaterThan(u.cacheLimit));
+    u.restore();
+    expect(u.liveCells(), initial);
+    u.advance(exponent: 2);
+    expected = initial;
+    for (var i = 0; i < 4; i++) {
+      expected = referenceStep(expected);
+    }
+    expect(u.liveCells(), expected);
+  });
+
+  test(
+    'interning preserves identity after table growth and reversed edits',
+    () {
+      final random = Random(73);
+      final cells = {
+        for (var y = 0; y < 32; y++)
+          for (var x = 0; x < 32; x++)
+            if (random.nextBool()) (x, y),
+      };
+      final u = seeded(cells, cacheLimit: 1000000);
+      final original = u.root;
+      final positions = [
+        for (var y = 0; y < 32; y++)
+          for (var x = 0; x < 32; x++) (x, y),
+      ];
+      for (final (x, y) in positions) {
+        u.setCell(x, y, !cells.contains((x, y)));
+      }
+      expect(u.cachedNodes, greaterThan(1000));
+      for (final (x, y) in positions.reversed) {
+        u.setCell(x, y, cells.contains((x, y)));
+      }
+      expect(u.root, same(original));
+      u.advance();
+      expect(u.liveCells(), referenceStep(cells));
+    },
+  );
+
   test('viewport traversal culls cells and aggregates subpixel nodes', () {
     final u = seeded({...glider, (1000000, 1000000)});
     final visible = <CellPosition>{};
