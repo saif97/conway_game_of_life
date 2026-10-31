@@ -41,10 +41,9 @@ bash tool/build_web.sh
 node tool/test_workers.mjs
 ```
 
-Deploy `build/web/` to your static host. `firebase.json` includes the isolation
-headers for Flutter’s threaded renderer and the Wasm MIME type. The generated
-loader retains JavaScript fallback for browsers that cannot run the Wasm build.
-Deployment is a separate step; building does not publish the application.
+Build for GitHub Pages with `bash tool/build_pages.sh`. This includes the
+`/conway_game_of_life/` base path, simulation workers, Wasm, and JavaScript fallback.
+Building locally does not publish the app.
 
 Read [the algorithm, tests, web-build tradeoffs and research sources](docs/architecture.md).
 Run `dart run tool/benchmark.dart` for reproducible engine-only timings. HashLife
@@ -52,19 +51,44 @@ excels at repeating patterns and large jumps; it is not universally fastest for
 chaotic dense boards. Web is the supported target of this modernization; native
 platform scaffolds still need separate migration and validation.
 
-## Enable GitHub Actions
+## Publish to GitHub Pages
 
-The workflow is staged at `tool/flutter.yml` because the publishing credential
-cannot write GitHub Actions workflows. CI remains inactive until it is moved:
+Site URL after deployment: https://saif97.github.io/conway_game_of_life/
+
+The deployment workflow is staged at `tool/pages.yml` because the publishing
+credential cannot write workflow files. Flutter verification CI already lives in
+`.github/workflows/flutter.yml`. To activate deployment, run these commands on
+the PR branch using credentials with workflow write access:
 
 ```sh
 mkdir -p .github/workflows
-git mv tool/flutter.yml .github/workflows/flutter.yml
-git commit -m "Enable Flutter CI workflow"
+git mv tool/pages.yml .github/workflows/pages.yml
+git commit -m "Enable GitHub Pages deployment"
 git push
 ```
 
-Run these commands on the PR branch with credentials that allow workflow updates.
+In repository **Settings → Pages → Build and deployment**, select **GitHub
+Actions** as the source. Merge the PR into `main`; the **Deploy GitHub Pages**
+workflow tests, builds, and publishes the app. Subsequent pushes to `main`
+redeploy it. You can also run the workflow manually from the Actions tab.
+
+For a local production build:
+
+```sh
+flutter pub get
+bash tool/build_pages.sh
+```
+
+The output is `build/web/`. For a custom domain hosted at its root, set
+`PAGES_BASE_PATH=/` when invoking the build script and configure that domain in
+GitHub Pages settings.
+
+GitHub Pages does not allow custom COOP/COEP headers. Flutter therefore uses
+single-threaded Wasm rendering; HashLife still runs in its own dedicated worker.
+Full page-and-worker memory estimates may be unavailable, so the performance
+panel uses its labeled partial-memory fallback. No service-worker workaround is
+required. Firebase configuration has been removed; this does not delete or
+unpublish any existing Firebase site.
 
 ## Credits
 
