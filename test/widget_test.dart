@@ -35,6 +35,34 @@ Future<ModelBoard> mount(WidgetTester tester, {FakeWorker? worker}) async {
 }
 
 void main() {
+  testWidgets('pattern library uses a sidebar or drawer, never both', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await mount(tester);
+
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+    expect(find.byTooltip('Open navigation menu'), findsNothing);
+    expect(tester.widget<Scaffold>(find.byType(Scaffold)).drawer, isNull);
+
+    tester.view.physicalSize = const Size(899, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsNothing);
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('PATTERN LIBRARY'), findsOneWidget);
+    expect(find.byTooltip('Open navigation menu'), findsNothing);
+    expect(tester.widget<Scaffold>(find.byType(Scaffold)).drawer, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('running status stays steady across worker requests', (
     tester,
   ) async {
